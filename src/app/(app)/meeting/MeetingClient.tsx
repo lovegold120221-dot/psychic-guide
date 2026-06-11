@@ -223,17 +223,14 @@ export default function MeetingClient() {
 
   useEffect(() => {
     if (!callId) return;
+    if (user?.id) setHostId(user.id); // Default to current user as host
     const supabase = createClient();
     const fetchHost = async () => {
-      const { data, error } = await supabase.from("orbit_meetings").select("host_id").eq("meeting_id", callId).single();
-      if (data?.host_id) {
-        setHostId(data.host_id);
-      } else if (error) {
-        console.error("Failed to fetch host", error);
-      }
+      const { data } = await supabase.from("orbit_meetings").select("host_id").eq("meeting_id", callId).single();
+      if (data?.host_id) setHostId(data.host_id);
     };
     fetchHost();
-  }, [callId]);
+  }, [callId, user?.id]);
 
   const urlName = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("name") : null;
   const userId = user?.id || anonId;
