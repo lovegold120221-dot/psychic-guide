@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect } from "react";
 import InitialAvatar from "./InitialAvatar";
 
 interface VideoPreviewProps {
@@ -19,6 +20,41 @@ export default function VideoPreview({
   compact = false,
   userName = "You",
 }: VideoPreviewProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  // Start/stop camera when toggle changes
+  useEffect(() => {
+    if (cameraOn) {
+      navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
+        .then((stream) => {
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+        })
+        .catch(() => {
+          // Permission denied or no camera — toggle back off
+          onToggleCamera();
+        });
+    } else {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => t.stop());
+        streamRef.current = null;
+      }
+    };
+  }, [cameraOn]);
+
   return (
     <div className="relative overflow-hidden rounded-2xl bg-orbit-darker border border-zinc-700/30 group">
       <div
@@ -28,8 +64,13 @@ export default function VideoPreview({
       >
         {cameraOn ? (
           <>
-            {/* Camera preview placeholder — real camera will stream here */}
-            <InitialAvatar name={userName} size={compact ? 60 : 80} />
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               <span className="text-[10px] font-semibold text-white">REC</span>
