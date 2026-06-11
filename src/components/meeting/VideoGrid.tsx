@@ -10,11 +10,7 @@ interface VideoGridProps {
   localCamOn: boolean;
 }
 
-export default function VideoGrid({
-  layoutMode,
-  localMicMuted,
-  localCamOn,
-}: VideoGridProps) {
+export default function VideoGrid({ layoutMode, localMicMuted, localCamOn }: VideoGridProps) {
   const { useParticipants, useCallCallingState, useLocalParticipant } = useCallStateHooks();
   const callState = useCallCallingState();
   const participants = useParticipants();
@@ -22,11 +18,17 @@ export default function VideoGrid({
 
   const isJoined = callState === CallingState.JOINED;
   const visible = isJoined ? participants : [];
-  const isSingle = visible.length === 1;
   const localUserId = localParticipant?.userId;
-
-  // Detect if local user is host
   const isHost = localParticipant?.roles?.includes("host") ?? false;
+
+  // Find screen share participant
+  const screenSharer = visible.find((p) => p.screenShareStream);
+  const videoParticipants = visible.filter((p) => !p.screenShareStream);
+  const isScreenSharing = !!screenSharer;
+
+  // Single participant — full screen (or screen share full screen)
+  const displayParticipants = isScreenSharing ? videoParticipants : visible;
+  const isSingle = displayParticipants.length <= 1;
 
   if (!isJoined) {
     return (
@@ -42,7 +44,7 @@ export default function VideoGrid({
     );
   }
 
-  if (visible.length === 0) {
+  if (displayParticipants.length === 0 && !isScreenSharing) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <p className="text-xs text-zinc-600">Waiting for participants...</p>
@@ -50,74 +52,88 @@ export default function VideoGrid({
     );
   }
 
-  // ─── SINGLE PARTICIPANT — fills the full stage ───────────
-  if (isSingle) {
-    return (
-      <div className="w-full h-full">
-        <FullScreenParticipantTile participant={visible[0]} isHost={isHost} />
-      </div>
-    );
-  }
-
-  // ─── 2-SPEAKER LAYOUT ────────────────────────────────────
-  if (layoutMode === "2-speaker") {
-    const [first, second] = visible;
-    return (
-      <div className="w-full h-full p-2 flex flex-col sm:flex-row items-center justify-center gap-1">
-        {first && <ParticipantTile participant={first} className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]" isSpeaking={first.isSpeaking} isHost={isHost} />}
-        {second && <ParticipantTile participant={second} className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]" isSpeaking={second.isSpeaking} />}
-      </div>
-    );
-  }
-
-  // ─── 3-GALLERY ───────────────────────────────────────────
-  if (layoutMode === "3-gallery") {
-    return (
-      <div className="w-full h-full p-2 flex flex-col gap-1 max-w-5xl mx-auto">
-        <div className="flex w-full h-1/2 gap-1 justify-center">
-          {visible[0] && <ParticipantTile participant={visible[0]} className="w-1/2 h-full" isSpeaking={visible[0].isSpeaking} isHost={isHost} />}
-          {visible[2] && <ParticipantTile participant={visible[2]} className="w-1/2 h-full" isSpeaking={visible[2].isSpeaking} />}
-        </div>
-        <div className="flex w-full h-1/2 gap-1 justify-center">
-          {visible[1] && <ParticipantTile participant={visible[1]} className="w-1/2 h-full" isSpeaking={visible[1].isSpeaking} />}
-        </div>
-      </div>
-    );
-  }
-
-  // ─── 4-GALLERY ───────────────────────────────────────────
-  if (layoutMode === "4-gallery") {
-    return (
-      <div className="w-full h-full p-2 grid grid-cols-2 grid-rows-2 gap-1 max-w-5xl mx-auto max-h-[90vh]">
-        {visible.slice(0, 4).map((p) => (
-          <ParticipantTile key={p.sessionId} participant={p} className="w-full h-full" isSpeaking={p.isSpeaking} isHost={isHost && p.userId === localUserId} />
-        ))}
-      </div>
-    );
-  }
-
-  // ─── 18-GALLERY (default) ────────────────────────────────
   return (
-    <div className="w-full h-full p-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 auto-rows-fr gap-1 overflow-y-auto content-start">
-      {visible.map((p) => (
-        <ParticipantTile key={p.sessionId} participant={p} className="w-full aspect-video" isSpeaking={p.isSpeaking} isHost={isHost && p.userId === localUserId} />
-      ))}
+    <div className="w-full h-full flex flex-col">
+      {/* Screen Share — full-width top area */}
+      {screenSharer && (
+        <div className="flex-1 min-h-0 p-1">
+          <div className="relative w-full h-full bg-black rounded-lg overflow-hidden border border-zinc-800">
+            <Video
+              className="absolute inset-0 w-full h-full object-contain"
+              participant={screenSharer}
+              trackType="screenShareTrack"
+              playsInline
+              muted={screenSharer.isLocal}
+            />
+            <div className="absolute bottom-2 left-2 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm text-[11px] text-white flex items-center gap-2">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              {screenSharer.name || screenSharer.userId}'s screen
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Participant tiles */}
+      <div className={isScreenSharing ? "h-32 sm:h-40 shrink-0 flex gap-1 p-1 overflow-x-auto" : "flex-1 flex"}>
+        {isScreenSharing ? (
+          /* Filmstrip during screen share */
+          displayParticipants.length === 0 ? (
+            <div className="flex items-center justify-center w-full text-xs text-zinc-600">
+              Only the presenter
+            </div>
+          ) : (
+            displayParticipants.map((p) => (
+              <ParticipantTile
+                key={p.sessionId}
+                participant={p}
+                className="h-full aspect-video shrink-0"
+                isSpeaking={p.isSpeaking}
+                isHost={isHost && p.userId === localUserId}
+              />
+            ))
+          )
+        ) : isSingle ? (
+          /* Full-screen single */
+          <FullScreenParticipantTile participant={displayParticipants[0]} isHost={isHost} />
+        ) : layoutMode === "2-speaker" ? (
+          <div className="w-full h-full p-2 flex flex-col sm:flex-row items-center justify-center gap-1">
+            {displayParticipants[0] && <ParticipantTile participant={displayParticipants[0]} className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]" isSpeaking={displayParticipants[0].isSpeaking} isHost={isHost} />}
+            {displayParticipants[1] && <ParticipantTile participant={displayParticipants[1]} className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]" isSpeaking={displayParticipants[1].isSpeaking} />}
+          </div>
+        ) : layoutMode === "3-gallery" ? (
+          <div className="w-full h-full p-2 flex flex-col gap-1 max-w-5xl mx-auto">
+            <div className="flex w-full h-1/2 gap-1 justify-center">
+              {displayParticipants[0] && <ParticipantTile participant={displayParticipants[0]} className="w-1/2 h-full" isSpeaking={displayParticipants[0].isSpeaking} isHost={isHost} />}
+              {displayParticipants[2] && <ParticipantTile participant={displayParticipants[2]} className="w-1/2 h-full" isSpeaking={displayParticipants[2].isSpeaking} />}
+            </div>
+            <div className="flex w-full h-1/2 gap-1 justify-center">
+              {displayParticipants[1] && <ParticipantTile participant={displayParticipants[1]} className="w-1/2 h-full" isSpeaking={displayParticipants[1].isSpeaking} />}
+            </div>
+          </div>
+        ) : layoutMode === "4-gallery" ? (
+          <div className="w-full h-full p-2 grid grid-cols-2 grid-rows-2 gap-1 max-w-5xl mx-auto max-h-[90vh]">
+            {displayParticipants.slice(0, 4).map((p) => (
+              <ParticipantTile key={p.sessionId} participant={p} className="w-full h-full" isSpeaking={p.isSpeaking} isHost={isHost && p.userId === localUserId} />
+            ))}
+          </div>
+        ) : (
+          <div className="w-full h-full p-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 auto-rows-fr gap-1 overflow-y-auto content-start">
+            {displayParticipants.map((p) => (
+              <ParticipantTile key={p.sessionId} participant={p} className="w-full aspect-video" isSpeaking={p.isSpeaking} isHost={isHost && p.userId === localUserId} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 // ─── Standard tile ────────────────────────────────────────────
 
-function ParticipantTile({
-  participant,
-  className = "",
-  isSpeaking = false,
-  isHost = false,
-}: {
-  participant: any;
-  className?: string;
-  isSpeaking?: boolean;
-  isHost?: boolean;
+function ParticipantTile({ participant, className = "", isSpeaking = false, isHost = false }: {
+  participant: any; className?: string; isSpeaking?: boolean; isHost?: boolean;
 }) {
   const isLocal = participant.isLocal;
   const hasVideo = participant.videoStream !== undefined && participant.videoStream !== null;
@@ -142,15 +158,9 @@ function ParticipantTile({
   );
 }
 
-// ─── Full-screen single participant ────────────────────────────
+// ─── Full-screen single ──────────────────────────────────────
 
-function FullScreenParticipantTile({
-  participant,
-  isHost = false,
-}: {
-  participant: any;
-  isHost?: boolean;
-}) {
+function FullScreenParticipantTile({ participant, isHost = false }: { participant: any; isHost?: boolean }) {
   const hasVideo = participant.videoStream !== undefined && participant.videoStream !== null;
   const name = participant.name || participant.userId || "Unknown";
   const isMuted = !participant.isAudioEnabled;
@@ -163,9 +173,7 @@ function FullScreenParticipantTile({
         <div className="absolute bottom-6 left-6 flex items-center gap-3">
           <span className="text-white text-lg font-semibold drop-shadow-lg">{name}</span>
           {isLocal && <span className="text-zinc-400 text-sm">(You)</span>}
-          {isHost && (
-            <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">HOST</span>
-          )}
+          {isHost && <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">HOST</span>}
           {isMuted && <MicOffIcon />}
         </div>
       </div>
@@ -178,36 +186,20 @@ function FullScreenParticipantTile({
       <div className="absolute bottom-6 left-6 flex items-center gap-3">
         <span className="text-white text-lg font-semibold drop-shadow-lg">{name}</span>
         {isLocal && <span className="text-zinc-400 text-sm">(You)</span>}
-        {isHost && (
-          <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">HOST</span>
-        )}
+        {isHost && <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">HOST</span>}
         {isMuted && <MicOffIcon />}
       </div>
     </div>
   );
 }
 
-// ─── Shared nameplate ──────────────────────────────────────────
-
-function Nameplate({
-  name,
-  isLocal,
-  isMuted,
-  isHost,
-}: {
-  name: string;
-  isLocal: boolean;
-  isMuted: boolean;
-  isHost?: boolean;
-}) {
+function Nameplate({ name, isLocal, isMuted, isHost }: { name: string; isLocal: boolean; isMuted: boolean; isHost?: boolean }) {
   return (
     <div className="absolute bottom-0 left-0 nameplate rounded-tr z-10 flex items-center gap-1.5">
       {isMuted && <MicOffIcon />}
       <span className="text-white">{name}</span>
       {isLocal && <span className="text-[10px] text-orbit-text-dim ml-0.5">(You)</span>}
-      {isHost && (
-        <span className="text-[9px] font-bold text-amber-400 ml-1">HOST</span>
-      )}
+      {isHost && <span className="text-[9px] font-bold text-amber-400 ml-1">HOST</span>}
     </div>
   );
 }
