@@ -15,6 +15,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
   user-select: none;
   overflow: hidden;
   /* iOS momentum scrolling where needed */
@@ -101,8 +102,8 @@ button, a, [role="button"] {
   }
   .orbit-panel-bg {
     background-color: rgba(26, 26, 26, 0.85);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
   .orbit-btn-hover {
     @apply transition-colors duration-150;
@@ -122,8 +123,8 @@ button, a, [role="button"] {
 
   .nameplate {
     background-color: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
     @apply px-2 py-0.5 text-xs flex items-center gap-1.5 rounded-tr;
   }
 
@@ -152,16 +153,16 @@ button, a, [role="button"] {
   /* Glassmorphism cards */
   .glass-card {
     background: rgba(36, 36, 36, 0.6);
-    backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.4);
   }
 
   .glass-card-elevated {
     background: rgba(36, 36, 36, 0.75);
-    backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
+    backdrop-filter: blur(32px);
     border: 1px solid rgba(255, 255, 255, 0.08);
     box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
   }

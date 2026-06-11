@@ -22,9 +22,9 @@ export default function LandingClient() {
   if (user) { router.replace("/dashboard"); return null; }
 
   return (
-    <div className="h-full w-full overflow-y-auto overscroll-contain bg-[#f5f5f7] dark:bg-black text-black dark:text-white">
+    <div className="h-full w-full overflow-y-auto overscroll-contain bg-orbit-darker text-white">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-white/[0.04]">
+      <nav className="sticky top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-xl border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit Logo" className="w-5 h-5 object-contain" />
@@ -73,8 +73,8 @@ export default function LandingClient() {
       {/* Features */}
       <section className="py-24 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-20">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Everything you need.</h2>
-          <p className="mt-4 text-base sm:text-lg text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto">Professional video conferencing, built for teams of every size.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">Everything you need.</h2>
+          <p className="mt-4 text-base sm:text-lg text-zinc-500 max-w-xl mx-auto">Professional video conferencing, built for teams of every size.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -84,31 +84,31 @@ export default function LandingClient() {
             { img: FEAT_IMG_3, title: "Virtual Backgrounds", desc: "Blur your background, use custom images, or apply Studio Touch beautification." },
           ].map((f, i) => (
             <div key={i} className="group">
-              <div className="overflow-hidden rounded-2xl mb-5 bg-zinc-100 dark:bg-zinc-900">
-                <img src={f.img} alt={f.title} className="w-full aspect-[4/3] object-cover group-hover:scale-[1.02] transition duration-700" />
+              <div className="overflow-hidden rounded-2xl mb-5 bg-orbit-card border border-white/[0.06]">
+                <img src={f.img} alt={f.title} className="w-full aspect-[4/3] object-cover group-hover:scale-[1.03] transition duration-500" />
               </div>
-              <h3 className="text-lg font-semibold">{f.title}</h3>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{f.desc}</p>
+              <h3 className="text-lg font-semibold text-white">{f.title}</h3>
+              <p className="mt-2 text-sm text-zinc-500 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6 bg-black text-white text-center">
+      <section className="py-24 px-6 bg-orbit-panel text-white text-center border-t border-white/[0.04]">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Start meeting in seconds.</h2>
-          <p className="mt-4 text-base text-zinc-400 max-w-md mx-auto">No downloads, no setup. Just click and join.</p>
+          <p className="mt-4 text-base text-zinc-500 max-w-md mx-auto">No downloads, no setup. Just click and join.</p>
           <div className="mt-10 flex items-center justify-center gap-4">
-            <Link href="/auth/signup" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-3.5 rounded-full transition active:scale-[0.97]">Get Started Free</Link>
-            <Link href="/auth/login" className="text-zinc-300 hover:text-white font-medium text-base px-8 py-3.5 rounded-full border border-zinc-700 hover:border-zinc-500 transition">Sign In</Link>
+            <Link href="/auth/signup" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-3.5 rounded-full transition active:scale-[0.97] shadow-lg shadow-blue-500/20">Get Started Free</Link>
+            <Link href="/auth/login" className="text-zinc-300 hover:text-white font-medium text-base px-8 py-3.5 rounded-full border border-white/[0.08] hover:border-white/20 transition">Sign In</Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-black/[0.04] dark:border-white/[0.04]">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-zinc-400">
+      <footer className="py-8 px-6 border-t border-white/[0.06]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-zinc-500">
           <span>Orbit Meeting — built by Eburon AI</span>
           <span>Powered by Stream &amp; Supabase</span>
         </div>
