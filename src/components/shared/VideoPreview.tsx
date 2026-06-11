@@ -1,5 +1,7 @@
 "use client";
 
+import InitialAvatar from "./InitialAvatar";
+
 interface VideoPreviewProps {
   cameraOn: boolean;
   micOn: boolean;
@@ -7,7 +9,6 @@ interface VideoPreviewProps {
   onToggleMic: () => void;
   compact?: boolean;
   userName?: string;
-  userAvatar?: string;
 }
 
 export default function VideoPreview({
@@ -17,7 +18,6 @@ export default function VideoPreview({
   onToggleMic,
   compact = false,
   userName = "You",
-  userAvatar = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80",
 }: VideoPreviewProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-orbit-darker border border-zinc-700/30 group">
@@ -28,11 +28,8 @@ export default function VideoPreview({
       >
         {cameraOn ? (
           <>
-            <img
-              src={userAvatar}
-              alt="Camera preview"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
+            {/* Camera preview placeholder — real camera will stream here */}
+            <InitialAvatar name={userName} size={compact ? 60 : 80} />
             <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               <span className="text-[10px] font-semibold text-white">REC</span>
@@ -40,9 +37,7 @@ export default function VideoPreview({
           </>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-4 ring-zinc-700/50 shadow-2xl">
-              <img src={userAvatar} alt={userName} className="w-full h-full object-cover" />
-            </div>
+            <InitialAvatar name={userName} size={compact ? 64 : 80} />
             <span className="text-xs text-zinc-500 font-medium">Camera is off</span>
           </div>
         )}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import InitialAvatar from "@/components/shared/InitialAvatar";
 
 const NAV_ITEMS = [
   {
@@ -42,9 +43,6 @@ interface SidebarProps {
 export default function Sidebar({ user, onSignOut }: SidebarProps) {
   const pathname = usePathname();
   const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
-  const avatarUrl =
-    user?.user_metadata?.avatar_url ||
-    `https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80`;
 
   return (
     <aside className="hidden md:flex orbit-sidebar w-[240px] h-full border-r border-black/50 flex-col pt-6 shrink-0">
@@ -78,11 +76,7 @@ export default function Sidebar({ user, onSignOut }: SidebarProps) {
       {/* User */}
       <div className="p-4 mt-auto border-t border-zinc-800">
         <div className="flex items-center gap-3 p-2 rounded-lg group cursor-pointer">
-          <img
-            src={avatarUrl}
-            alt={displayName}
-            className="w-9 h-9 rounded-full object-cover"
-          />
+          <InitialAvatar name={displayName} size={36} />
           <div className="flex-1 min-w-0">
             <div className="text-sm font-semibold text-white truncate">{displayName}</div>
             <div className="text-[11px] text-zinc-500 truncate">{user?.email}</div>

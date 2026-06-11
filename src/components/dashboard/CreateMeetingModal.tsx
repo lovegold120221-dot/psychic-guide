@@ -25,8 +25,6 @@ export default function CreateMeetingModal({
   const [isStarting, setIsStarting] = useState(false);
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "You";
-  const userAvatar = user?.user_metadata?.avatar_url ||
-    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80";
 
   // Close on Escape
   useEffect(() => {
@@ -114,7 +112,6 @@ export default function CreateMeetingModal({
             onToggleMic={() => setMicOn((p) => !p)}
             compact
             userName={userName}
-            userAvatar={userAvatar}
           />
 
           {/* Meeting ID */}

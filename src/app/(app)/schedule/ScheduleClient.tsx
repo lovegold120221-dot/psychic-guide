@@ -23,8 +23,6 @@ export default function ScheduleClient() {
   });
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "You";
-  const userAvatar = user?.user_metadata?.avatar_url ||
-    "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80";
 
   const [cameraOn, setCameraOn] = useState(false);
   const [micOn, setMicOn] = useState(true);
@@ -114,7 +112,6 @@ export default function ScheduleClient() {
           onToggleMic={() => setMicOn((p) => !p)}
           compact
           userName={userName}
-          userAvatar={userAvatar}
         />
 
         <FormField

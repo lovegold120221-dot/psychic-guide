@@ -40,7 +40,6 @@ export function useStreamVideo({ userId, userName }: UseStreamVideoOptions) {
       const streamUser: User = {
         id: userId,
         name: userName,
-        image: `https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80`,
       };
 
       const videoClient = new StreamVideoClient({
