@@ -50,7 +50,6 @@ export function useStreamChat(userId: string, userName: string) {
       });
 
       if (!res.ok) {
-        console.warn("Stream token API unavailable, using dev token");
         const devToken = chatClient.devToken(userId);
         await chatClient.connectUser({ id: userId, name: userName }, devToken);
       } else {
@@ -60,23 +59,21 @@ export function useStreamChat(userId: string, userName: string) {
 
       const meetingChannel = chatClient.channel("messaging", "orbit_meeting_room_main", {
         name: "Orbit Main Meeting Room",
-        image: "https://eburon.ai/icon-eburon.svg",
       });
 
       await meetingChannel.watch();
       channelRef.current = meetingChannel;
 
-      // Track channel members (for private chat user list)
+      // Track members
       const updateUsers = () => {
-        const membersMap = meetingChannel.state.members;
+        const membersMap: any = meetingChannel.state.members;
         const chatUsers: ChatUserInfo[] = [];
         if (membersMap && typeof membersMap === "object") {
-          // members can be a Map or an object
           const entries = membersMap instanceof Map
             ? Array.from(membersMap.values())
             : Object.values(membersMap);
           entries.forEach((member: any) => {
-            if (member.user?.id) {
+            if (member.user?.id && member.user.id !== userId) {
               chatUsers.push({
                 id: member.user.id,
                 name: member.user.name || member.user.id,
@@ -88,35 +85,38 @@ export function useStreamChat(userId: string, userName: string) {
         setUsers(chatUsers);
       };
       updateUsers();
-
-      // Listen for member updates
       meetingChannel.on("member.added", updateUsers);
       meetingChannel.on("member.removed", updateUsers);
-      meetingChannel.on("user.watching.start", updateUsers);
-      meetingChannel.on("user.watching.stop", updateUsers);
 
-      // Listen for new messages (including private)
+      // ─── Message receive handler with private message support ──
       meetingChannel.on("message.new", (event: any) => {
         const msg = event.message;
-        const isPrivate = msg.text?.startsWith("/dm ") || false;
-        const targetId = isPrivate ? msg.text?.match(/^\/dm\s+(\S+)/)?.[1] : undefined;
-        const cleanText = isPrivate && targetId ? msg.text?.replace(/^\/dm\s+\S+\s*/, "") : msg.text;
+        const msgUserId = msg.user?.id || "unknown";
+        const msgUserName = msg.user?.name || msg.user?.id || "Unknown";
+        const isPrivate = msg.is_private === true;
+        const targetUserId = msg.target_user_id || undefined;
+
+        // Skip private messages not intended for us
+        if (isPrivate && targetUserId && targetUserId !== userId) return;
 
         setMessages((prev) => [
           ...prev,
           {
             id: msg.id,
-            userId: msg.user?.id || "unknown",
-            userName: msg.user?.name || msg.user?.id || "Unknown",
-            text: cleanText || msg.text || "",
-            time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            userId: msgUserId,
+            userName: msgUserName,
+            text: msg.text || "",
+            time: new Date(msg.created_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
             isPrivate,
-            targetUserId: targetId,
+            targetUserId,
           },
         ]);
       });
 
-      // Listen for reaction events
+      // Reaction events
       meetingChannel.on("custom.reaction" as any, (event: any) => {
         if (event.custom?.emoji) {
           window.dispatchEvent(
@@ -129,13 +129,21 @@ export function useStreamChat(userId: string, userName: string) {
 
       // Load existing messages
       if (meetingChannel.state.messages?.length > 0) {
-        const existing: StreamChatMessage[] = meetingChannel.state.messages.map((msg: any) => ({
-          id: msg.id,
-          userId: msg.user?.id || "unknown",
-          userName: msg.user?.name || msg.user?.id || "Unknown",
-          text: msg.text || "",
-          time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        }));
+        const existing: StreamChatMessage[] = meetingChannel.state.messages
+          .filter((msg: any) => {
+            // Filter out private msgs not for us
+            if (msg.is_private && msg.target_user_id && msg.target_user_id !== userId) return false;
+            return true;
+          })
+          .map((msg: any) => ({
+            id: msg.id,
+            userId: msg.user?.id || "unknown",
+            userName: msg.user?.name || msg.user?.id || "Unknown",
+            text: msg.text || "",
+            time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            isPrivate: msg.is_private === true,
+            targetUserId: msg.target_user_id || undefined,
+          }));
         setMessages(existing);
       }
 
@@ -150,18 +158,18 @@ export function useStreamChat(userId: string, userName: string) {
     }
   }, [userId, userName]);
 
-  // Send message (global or private)
+  // ─── Send message (global or private) ───────────────────────
   const sendMessage = useCallback(
     async (text: string, targetUserId?: string) => {
       const ch = channelRef.current;
       if (!ch || !text.trim()) return false;
       try {
+        const msgData: any = { text: text.trim() };
         if (targetUserId) {
-          // Send as private message using Stream's /dm prefix
-          await ch.sendMessage({ text: `/dm ${targetUserId} ${text.trim()}` });
-        } else {
-          await ch.sendMessage({ text: text.trim() });
+          msgData.is_private = true;
+          msgData.target_user_id = targetUserId;
         }
+        await ch.sendMessage(msgData);
         return true;
       } catch (err) {
         console.error("Stream send error:", err);
@@ -171,7 +179,6 @@ export function useStreamChat(userId: string, userName: string) {
     []
   );
 
-  // Send reaction event
   const sendReaction = useCallback(
     async (emoji: string, sender: string) => {
       if (!channelRef.current) return false;
@@ -186,7 +193,6 @@ export function useStreamChat(userId: string, userName: string) {
     []
   );
 
-  // Disconnect on unmount
   useEffect(() => {
     connect();
     return () => {
