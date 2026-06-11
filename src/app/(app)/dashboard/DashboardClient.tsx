@@ -84,7 +84,7 @@ export default function DashboardClient() {
             <h1 className="text-xl sm:text-2xl font-bold text-white">
               Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ""}
             </h1>
-            <p className="text-sm text-zinc-400 mt-1">{user?.email}</p>
+            <p className="text-xs text-zinc-500 mt-1">{user?.email}</p>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">

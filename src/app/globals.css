@@ -96,6 +96,9 @@ button, a, [role="button"] {
   .orbit-toolbar {
     @apply bg-orbit-dark;
   }
+  .orbit-sidebar {
+    @apply bg-orbit-panel;
+  }
   .orbit-panel-bg {
     background-color: rgba(26, 26, 26, 0.85);
     backdrop-filter: blur(12px);
@@ -148,19 +151,19 @@ button, a, [role="button"] {
 
   /* Glassmorphism cards */
   .glass-card {
-    background: rgba(36, 36, 36, 0.7);
+    background: rgba(36, 36, 36, 0.6);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 25px 60px -20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.4);
   }
 
   .glass-card-elevated {
-    background: rgba(36, 36, 36, 0.8);
+    background: rgba(36, 36, 36, 0.75);
     backdrop-filter: blur(32px);
     -webkit-backdrop-filter: blur(32px);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5);
   }
 
   /* Clock gradient */

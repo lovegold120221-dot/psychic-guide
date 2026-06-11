@@ -55,12 +55,12 @@ export default function AuthLayout({
           )}
 
           {/* Header */}
-          <div className="mb-6 sm:mb-8 text-center sm:text-left">
+          <div className="mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               {title}
             </h1>
             {subtitle && (
-              <p className="mt-2 text-sm text-zinc-400">{subtitle}</p>
+              <p className="mt-2 text-sm text-zinc-500">{subtitle}</p>
             )}
           </div>
 

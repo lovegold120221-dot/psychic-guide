@@ -59,7 +59,7 @@ export default function MobileNav() {
   if (pathname?.startsWith("/meeting")) return null;
 
   return (
-    <nav className="md:hidden sticky bottom-0 inset-x-0 h-16 bg-orbit-panel/95 backdrop-blur-2xl border-t border-white/[0.04] flex items-center justify-around z-50 safe-bottom">
+    <nav className="md:hidden sticky bottom-0 inset-x-0 h-16 bg-orbit-panel/95 backdrop-blur-2xl border-t border-white/[0.06] flex items-center justify-around z-50 safe-bottom">
       {NAV_ITEMS.map((item) => {
         const isActive = pathname === item.href || (item.href !== "#" && pathname?.startsWith(item.href));
         return (
