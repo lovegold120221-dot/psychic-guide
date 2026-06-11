@@ -16,6 +16,7 @@ interface ParticipantsPanelProps {
   participants: any[];
   currentUserId: string;
   isHost: boolean;
+  hostId?: string | null;
   onMuteParticipant: (userId: string) => Promise<void>;
   onRemoveParticipant: (userId: string) => Promise<void>;
   onClose: () => void;
@@ -25,6 +26,7 @@ export default function ParticipantsPanel({
   participants,
   currentUserId,
   isHost,
+  hostId,
   onMuteParticipant,
   onRemoveParticipant,
   onClose,
@@ -43,7 +45,7 @@ export default function ParticipantsPanel({
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {participants.map((p) => {
             const isMe = p.userId === currentUserId;
-            const isUserHost = p.roles?.includes("host");
+            const isUserHost = p.roles?.includes("host") || (!!hostId && p.userId === hostId);
             const name = p.name || p.userId || "Unknown";
 
             return (

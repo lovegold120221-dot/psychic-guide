@@ -233,6 +233,7 @@ function MeetingRoomUI() {
           participants={participants}
           currentUserId={user?.id || ""}
           isHost={isHost}
+          hostId={hostId}
           onMuteParticipant={muteParticipant}
           onRemoveParticipant={removeParticipant}
           onClose={() => setParticipantsPanelOpen(false)}
