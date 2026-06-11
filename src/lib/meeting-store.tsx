@@ -7,25 +7,56 @@ import {
   useCallStateHooks,
   CallingState,
   useStreamVideoClient,
+  useToggleCallRecording,
   type StreamVideoClient,
 } from "@stream-io/video-react-sdk";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import { useStreamChat, type StreamChatMessage } from "./stream";
 
-// ─── Context ───────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────
+
+export interface ChatUser {
+  id: string;
+  name: string;
+  online: boolean;
+}
 
 interface MeetingRoomValue {
+  // Chat
   chatMessages: StreamChatMessage[];
-  sendChatMessage: (text: string) => Promise<boolean>;
+  sendChatMessage: (text: string, targetUserId?: string) => Promise<boolean>;
   sendReaction: (emoji: string, sender: string) => Promise<boolean>;
+  chatConnected: boolean;
+  chatUsers: ChatUser[];
+
+  // Call state
   participantsCount: number;
   callState: CallingState;
+  videoConnected: boolean;
+  isHost: boolean;
+
+  // Camera / Mic
   toggleCamera: () => void;
   toggleMic: () => void;
   isCameraMuted: boolean;
   isMicMuted: boolean;
-  chatConnected: boolean;
-  videoConnected: boolean;
+
+  // Recording
+  toggleRecording: () => void;
+  isRecording: boolean;
+  recordingPending: boolean;
+
+  // Screen Share
+  toggleScreenShare: () => void;
+  isScreenSharing: boolean;
+
+  // Whiteboard
+  whiteboardOpen: boolean;
+  setWhiteboardOpen: (v: boolean) => void;
+
+  // Host controls
+  muteParticipant: (userId: string) => Promise<void>;
+  removeParticipant: (userId: string) => Promise<void>;
 }
 
 const MeetingRoomCtx = createContext<MeetingRoomValue | null>(null);
@@ -36,26 +67,83 @@ export function useMeetingRoom() {
   return ctx;
 }
 
-// ─── Inner — lives inside <StreamVideo> AND <StreamCall> ─────
+// ─── Inner (inside StreamCall) ─────────────────────────────────
 
 function MeetingRoomInner({
   children,
   chatMessages,
   chatConnected,
+  chatUsers,
   sendChatMessage,
   sendReaction,
 }: {
   children: ReactNode;
   chatMessages: StreamChatMessage[];
   chatConnected: boolean;
-  sendChatMessage: (text: string) => Promise<boolean>;
+  chatUsers: ChatUser[];
+  sendChatMessage: (text: string, targetUserId?: string) => Promise<boolean>;
   sendReaction: (emoji: string, sender: string) => Promise<boolean>;
 }) {
-  const { useCallCallingState, useParticipants, useCameraState, useMicrophoneState } = useCallStateHooks();
+  const call = useCall();
+  const {
+    useCallCallingState,
+    useParticipants,
+    useCameraState,
+    useMicrophoneState,
+    useLocalParticipant,
+  } = useCallStateHooks();
   const callState = useCallCallingState();
   const participants = useParticipants();
   const { camera } = useCameraState();
   const { microphone } = useMicrophoneState();
+  const localParticipant = useLocalParticipant();
+  const {
+    toggleCallRecording,
+    isCallRecordingInProgress,
+    isAwaitingResponse: recordingPending,
+  } = useToggleCallRecording();
+
+  const isHost = localParticipant?.roles?.includes("host") ?? false;
+  const isScreenSharing = participants.some((p) => p.userId === localParticipant?.userId && !!p.screenShareStream);
+  const [whiteboardOpen, setWhiteboardOpen] = useState(false);
+
+  const toggleScreenShare = useCallback(async () => {
+    if (!call) return;
+    try {
+      const ss = (call as any).screenShare;
+      if (isScreenSharing) {
+        await ss.disable();
+      } else {
+        await ss.enable();
+      }
+    } catch (err) {
+      console.error("Screen share toggle error:", err);
+    }
+  }, [call, isScreenSharing]);
+
+  const muteParticipant = useCallback(
+    async (userId: string) => {
+      if (!call || !isHost) return;
+      try {
+        await (call as any).muteUser(userId, "audio");
+      } catch (err) {
+        console.error("Failed to mute participant:", err);
+      }
+    },
+    [call, isHost]
+  );
+
+  const removeParticipant = useCallback(
+    async (userId: string) => {
+      if (!call || !isHost) return;
+      try {
+        await (call as any).blockUser(userId);
+      } catch (err) {
+        console.error("Failed to remove participant:", err);
+      }
+    },
+    [call, isHost]
+  );
 
   return (
     <MeetingRoomCtx.Provider
@@ -63,14 +151,25 @@ function MeetingRoomInner({
         videoConnected: callState === CallingState.JOINED,
         chatConnected,
         chatMessages,
+        chatUsers,
         sendChatMessage,
         sendReaction,
         participantsCount: participants.length,
         callState,
+        isHost,
         toggleCamera: () => (camera.enabled ? camera.disable() : camera.enable()),
         toggleMic: () => (microphone.enabled ? microphone.disable() : microphone.enable()),
         isCameraMuted: !camera.enabled,
         isMicMuted: !microphone.enabled,
+        toggleRecording: toggleCallRecording,
+        isRecording: isCallRecordingInProgress,
+        recordingPending,
+        toggleScreenShare,
+        isScreenSharing,
+        whiteboardOpen,
+        setWhiteboardOpen,
+        muteParticipant,
+        removeParticipant,
       }}
     >
       {children}
@@ -78,13 +177,14 @@ function MeetingRoomInner({
   );
 }
 
-// ─── Call Creator (needs StreamVideo context to use the client) ─
+// ─── Call Creator ──────────────────────────────────────────────
 
 function CallCreator({
   callId,
   children,
   chatMessages,
   chatConnected,
+  chatUsers,
   sendChatMessage,
   sendReaction,
 }: {
@@ -92,7 +192,8 @@ function CallCreator({
   children: ReactNode;
   chatMessages: StreamChatMessage[];
   chatConnected: boolean;
-  sendChatMessage: (text: string) => Promise<boolean>;
+  chatUsers: ChatUser[];
+  sendChatMessage: (text: string, targetUserId?: string) => Promise<boolean>;
   sendReaction: (emoji: string, sender: string) => Promise<boolean>;
 }) {
   const client = useStreamVideoClient();
@@ -101,18 +202,13 @@ function CallCreator({
 
   useEffect(() => {
     if (!client) return;
-
     const newCall = client.call("default", callId);
     setCall(newCall);
-
     newCall.join({ create: true }).catch((err: any) => {
       console.error("Failed to join call:", err);
       setError(err.message);
     });
-
-    return () => {
-      newCall.leave().catch(() => {});
-    };
+    return () => { newCall.leave().catch(() => {}); };
   }, [client, callId]);
 
   if (error) {
@@ -126,12 +222,7 @@ function CallCreator({
           </div>
           <h2 className="text-lg font-bold text-white mb-2">Call failed</h2>
           <p className="text-sm text-zinc-400 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-orbit-blue hover:bg-blue-500 text-white font-semibold text-sm px-6 py-3 rounded-xl transition active:scale-[0.98]"
-          >
-            Retry
-          </button>
+          <button onClick={() => window.location.reload()} className="bg-orbit-blue hover:bg-blue-500 text-white font-semibold text-sm px-6 py-3 rounded-xl transition active:scale-[0.98]">Retry</button>
         </div>
       </div>
     );
@@ -156,6 +247,7 @@ function CallCreator({
       <MeetingRoomInner
         chatMessages={chatMessages}
         chatConnected={chatConnected}
+        chatUsers={chatUsers}
         sendChatMessage={sendChatMessage}
         sendReaction={sendReaction}
       >
@@ -179,6 +271,7 @@ export function MeetingRoomProvider({ client, userId, userName, callId, children
   const {
     connectionState: chatConnected,
     messages: chatMessages,
+    users: chatUsers,
     sendMessage: sendChatMessage,
     sendReaction,
   } = useStreamChat(userId, userName);
@@ -203,6 +296,7 @@ export function MeetingRoomProvider({ client, userId, userName, callId, children
         callId={callId}
         chatMessages={chatMessages}
         chatConnected={chatConnected === "connected"}
+        chatUsers={chatUsers}
         sendChatMessage={sendChatMessage}
         sendReaction={sendReaction}
       >

@@ -13,6 +13,14 @@ export interface StreamChatMessage {
   userName: string;
   text: string;
   time: string;
+  isPrivate?: boolean;
+  targetUserId?: string;
+}
+
+export interface ChatUserInfo {
+  id: string;
+  name: string;
+  online: boolean;
 }
 
 // ---- Stream Chat Hook ----
@@ -21,22 +29,20 @@ export function useStreamChat(userId: string, userName: string) {
   const [channel, setChannel] = useState<any>(null);
   const [connectionState, setConnectionState] = useState<StreamConnectionState>("disconnected");
   const [messages, setMessages] = useState<StreamChatMessage[]>([]);
+  const [users, setUsers] = useState<ChatUserInfo[]>([]);
   const clientRef = useRef<StreamChat | null>(null);
-
-  // Connect to Stream
   const connectingRef = useRef(false);
+  const channelRef = useRef<any>(null);
 
   const connect = useCallback(async () => {
     if (clientRef.current || connectingRef.current) return;
     connectingRef.current = true;
-
     setConnectionState("connecting");
 
     try {
       const chatClient = StreamChat.getInstance(STREAM_API_KEY);
       clientRef.current = chatClient;
 
-      // Fetch token from our API route
       const res = await fetch("/api/stream-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,43 +50,68 @@ export function useStreamChat(userId: string, userName: string) {
       });
 
       if (!res.ok) {
-        // Fallback to dev token if API route unavailable
         console.warn("Stream token API unavailable, using dev token");
         const devToken = chatClient.devToken(userId);
-        await chatClient.connectUser(
-          { id: userId, name: userName },
-          devToken
-        );
+        await chatClient.connectUser({ id: userId, name: userName }, devToken);
       } else {
         const { token } = await res.json();
-        await chatClient.connectUser(
-          { id: userId, name: userName },
-          token
-        );
+        await chatClient.connectUser({ id: userId, name: userName }, token);
       }
 
-      // Create or join the Orbit meeting channel
       const meetingChannel = chatClient.channel("messaging", "orbit_meeting_room_main", {
         name: "Orbit Main Meeting Room",
         image: "https://eburon.ai/icon-eburon.svg",
       });
 
       await meetingChannel.watch();
+      channelRef.current = meetingChannel;
 
-      // Listen for new messages
+      // Track channel members (for private chat user list)
+      const updateUsers = () => {
+        const membersMap = meetingChannel.state.members;
+        const chatUsers: ChatUserInfo[] = [];
+        if (membersMap && typeof membersMap === "object") {
+          // members can be a Map or an object
+          const entries = membersMap instanceof Map
+            ? Array.from(membersMap.values())
+            : Object.values(membersMap);
+          entries.forEach((member: any) => {
+            if (member.user?.id) {
+              chatUsers.push({
+                id: member.user.id,
+                name: member.user.name || member.user.id,
+                online: member.user.online || false,
+              });
+            }
+          });
+        }
+        setUsers(chatUsers);
+      };
+      updateUsers();
+
+      // Listen for member updates
+      meetingChannel.on("member.added", updateUsers);
+      meetingChannel.on("member.removed", updateUsers);
+      meetingChannel.on("user.watching.start", updateUsers);
+      meetingChannel.on("user.watching.stop", updateUsers);
+
+      // Listen for new messages (including private)
       meetingChannel.on("message.new", (event: any) => {
         const msg = event.message;
+        const isPrivate = msg.text?.startsWith("/dm ") || false;
+        const targetId = isPrivate ? msg.text?.match(/^\/dm\s+(\S+)/)?.[1] : undefined;
+        const cleanText = isPrivate && targetId ? msg.text?.replace(/^\/dm\s+\S+\s*/, "") : msg.text;
+
         setMessages((prev) => [
           ...prev,
           {
             id: msg.id,
             userId: msg.user?.id || "unknown",
             userName: msg.user?.name || msg.user?.id || "Unknown",
-            text: msg.text || "",
-            time: new Date(msg.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
+            text: cleanText || msg.text || "",
+            time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            isPrivate,
+            targetUserId: targetId,
           },
         ]);
       });
@@ -88,13 +119,9 @@ export function useStreamChat(userId: string, userName: string) {
       // Listen for reaction events
       meetingChannel.on("custom.reaction" as any, (event: any) => {
         if (event.custom?.emoji) {
-          // Dispatch custom event for reactions
           window.dispatchEvent(
             new CustomEvent("stream-reaction", {
-              detail: {
-                emoji: event.custom.emoji,
-                sender: event.custom.sender || "Someone",
-              },
+              detail: { emoji: event.custom.emoji, sender: event.custom.sender || "Someone" },
             })
           );
         }
@@ -102,18 +129,13 @@ export function useStreamChat(userId: string, userName: string) {
 
       // Load existing messages
       if (meetingChannel.state.messages?.length > 0) {
-        const existing: StreamChatMessage[] = meetingChannel.state.messages.map(
-          (msg: any) => ({
-            id: msg.id,
-            userId: msg.user?.id || "unknown",
-            userName: msg.user?.name || msg.user?.id || "Unknown",
-            text: msg.text || "",
-            time: new Date(msg.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          })
-        );
+        const existing: StreamChatMessage[] = meetingChannel.state.messages.map((msg: any) => ({
+          id: msg.id,
+          userId: msg.user?.id || "unknown",
+          userName: msg.user?.name || msg.user?.id || "Unknown",
+          text: msg.text || "",
+          time: new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        }));
         setMessages(existing);
       }
 
@@ -128,36 +150,40 @@ export function useStreamChat(userId: string, userName: string) {
     }
   }, [userId, userName]);
 
-  // Send message
+  // Send message (global or private)
   const sendMessage = useCallback(
-    async (text: string) => {
-      if (!channel || !text.trim()) return false;
+    async (text: string, targetUserId?: string) => {
+      const ch = channelRef.current;
+      if (!ch || !text.trim()) return false;
       try {
-        await channel.sendMessage({ text: text.trim() });
+        if (targetUserId) {
+          // Send as private message using Stream's /dm prefix
+          await ch.sendMessage({ text: `/dm ${targetUserId} ${text.trim()}` });
+        } else {
+          await ch.sendMessage({ text: text.trim() });
+        }
         return true;
       } catch (err) {
         console.error("Stream send error:", err);
         return false;
       }
     },
-    [channel]
+    []
   );
 
   // Send reaction event
   const sendReaction = useCallback(
     async (emoji: string, sender: string) => {
-      if (!channel) return false;
+      if (!channelRef.current) return false;
       try {
-        await channel.sendEvent({
+        await channelRef.current.sendEvent({
           type: "custom.reaction",
           custom: { emoji, sender },
         });
         return true;
-      } catch {
-        return false;
-      }
+      } catch { return false; }
     },
-    [channel]
+    []
   );
 
   // Disconnect on unmount
@@ -172,12 +198,5 @@ export function useStreamChat(userId: string, userName: string) {
     };
   }, [connect]);
 
-  return {
-    client,
-    channel,
-    connectionState,
-    messages,
-    sendMessage,
-    sendReaction,
-  };
+  return { client, channel, connectionState, messages, users, sendMessage, sendReaction };
 }
