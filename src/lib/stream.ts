@@ -3,7 +3,7 @@
 import { StreamChat } from "stream-chat";
 import { useState, useCallback, useEffect, useRef } from "react";
 
-const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || "5h6dzs74tch5";
+const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || "";
 
 export type StreamConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
@@ -40,6 +40,7 @@ export function useStreamChat(userId: string, userName: string) {
     setConnectionState("connecting");
 
     try {
+      if (!STREAM_API_KEY) throw new Error("Stream API key missing");
       const chatClient = StreamChat.getInstance(STREAM_API_KEY);
       clientRef.current = chatClient;
 

@@ -16,13 +16,13 @@ export default function SecurityPanel({ onClose, isHost }: SecurityPanelProps) {
         </div>
         <div className="p-5 space-y-4">
           <div className="flex items-start gap-3 p-3 bg-orbit-darker rounded-xl">
-            <svg className="w-5 h-5 text-orbit-green mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#3dbb61" />
+            <svg className="w-5 h-5 text-orbit-blue mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="#0e72ed" />
               <path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <div>
-              <p className="text-sm font-semibold text-white">End-to-end encrypted</p>
-              <p className="text-xs text-zinc-400 mt-1">All video, audio, and messages are encrypted end-to-end. No third party can access your meeting data.</p>
+              <p className="text-sm font-semibold text-white">Encrypted in transit</p>
+              <p className="text-xs text-zinc-400 mt-1">All video, audio, and messages are encrypted with TLS 1.3 between your device and Stream's servers.</p>
             </div>
           </div>
 

@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { StreamVideoClient, type User } from "@stream-io/video-react-sdk";
 
-const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY || "";
+const STREAM_API_KEY = process.env.NEXT_PUBLIC_STREAM_API_KEY;
 
 export type VideoConnectionState = "idle" | "connecting" | "connected" | "error";
 
@@ -42,6 +42,7 @@ export function useStreamVideo({ userId, userName }: UseStreamVideoOptions) {
         name: userName,
       };
 
+      if (!STREAM_API_KEY) throw new Error("Stream API key missing");
       const videoClient = new StreamVideoClient({
         apiKey: STREAM_API_KEY,
         user: streamUser,

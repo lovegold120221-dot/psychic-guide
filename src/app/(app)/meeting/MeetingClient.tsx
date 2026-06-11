@@ -141,7 +141,7 @@ function MeetingRoomUI() {
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     <path fill="#1a1a1a" d="M10.5 14.5l-3-3 1.5-1.5 1.5 1.5 4.5-4.5 1.5 1.5-6 6z" />
                   </svg>
-                  <span className="font-medium tracking-wide">End-to-end Encrypted</span>
+                  <span className="font-medium tracking-wide">TLS Encrypted</span>
                 </div>
               </div>
 
