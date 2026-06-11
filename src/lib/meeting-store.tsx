@@ -34,6 +34,8 @@ interface MeetingRoomValue {
   callState: CallingState;
   videoConnected: boolean;
   isHost: boolean;
+  participants: any[];
+  callId: string;
 
   // Camera / Mic
   toggleCamera: () => void;
@@ -76,6 +78,7 @@ function MeetingRoomInner({
   chatUsers,
   sendChatMessage,
   sendReaction,
+  callId,
 }: {
   children: ReactNode;
   chatMessages: StreamChatMessage[];
@@ -83,6 +86,7 @@ function MeetingRoomInner({
   chatUsers: ChatUser[];
   sendChatMessage: (text: string, targetUserId?: string) => Promise<boolean>;
   sendReaction: (emoji: string, sender: string) => Promise<boolean>;
+  callId: string;
 }) {
   const call = useCall();
   const {
@@ -155,8 +159,10 @@ function MeetingRoomInner({
         sendChatMessage,
         sendReaction,
         participantsCount: participants.length,
+        participants,
         callState,
         isHost,
+        callId,
         toggleCamera: () => (camera.enabled ? camera.disable() : camera.enable()),
         toggleMic: () => (microphone.enabled ? microphone.disable() : microphone.enable()),
         isCameraMuted: !camera.enabled,
@@ -245,6 +251,7 @@ function CallCreator({
   return (
     <StreamCall call={call}>
       <MeetingRoomInner
+        callId={callId}
         chatMessages={chatMessages}
         chatConnected={chatConnected}
         chatUsers={chatUsers}

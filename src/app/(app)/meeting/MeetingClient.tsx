@@ -9,6 +9,8 @@ import VideoGrid from "@/components/meeting/VideoGrid";
 import ChatSidebar from "@/components/meeting/ChatSidebar";
 import BottomToolbar from "@/components/meeting/BottomToolbar";
 import Whiteboard from "@/components/meeting/Whiteboard";
+import SecurityPanel from "@/components/meeting/SecurityPanel";
+import ParticipantsPanel from "@/components/meeting/ParticipantsPanel";
 import FloatingReactions from "@/components/meeting/FloatingReactions";
 import { useMeetingState, useReactionAnimation } from "@/lib/hooks";
 import { LAYOUT_OPTIONS } from "@/lib/constants";
@@ -24,6 +26,7 @@ function MeetingRoomUI() {
     sendChatMessage,
     sendReaction,
     participantsCount,
+    participants,
     toggleCamera,
     toggleMic,
     isCameraMuted,
@@ -36,6 +39,9 @@ function MeetingRoomUI() {
     isHost,
     whiteboardOpen,
     setWhiteboardOpen,
+    muteParticipant,
+    removeParticipant,
+    callId,
   } = useMeetingRoom();
 
   const { user } = useAuth();
@@ -68,6 +74,18 @@ function MeetingRoomUI() {
     async (text: string, targetUserId?: string) => await sendChatMessage(text, targetUserId),
     [sendChatMessage]
   );
+
+  const [participantsPanelOpen, setParticipantsPanelOpen] = useState(false);
+  const [securityPanelOpen, setSecurityPanelOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyLink = useCallback(() => {
+    const link = `${window.location.origin}/meeting?call=${callId}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }).catch(() => {});
+  }, [callId]);
 
   const handleReaction = useCallback(
     (emoji: string) => {
@@ -195,7 +213,31 @@ function MeetingRoomUI() {
         isHost={isHost}
         onToggleWhiteboard={() => setWhiteboardOpen(!whiteboardOpen)}
         whiteboardOpen={whiteboardOpen}
+        onToggleSecurity={() => setSecurityPanelOpen(true)}
+        onToggleParticipants={() => setParticipantsPanelOpen(true)}
+        onShareLink={handleCopyLink}
+        copiedLink={copiedLink}
       />
+
+      {/* Security Panel */}
+      {securityPanelOpen && (
+        <SecurityPanel
+          onClose={() => setSecurityPanelOpen(false)}
+          isHost={isHost}
+        />
+      )}
+
+      {/* Participants Panel */}
+      {participantsPanelOpen && (
+        <ParticipantsPanel
+          participants={participants}
+          currentUserId={user?.id || ""}
+          isHost={isHost}
+          onMuteParticipant={muteParticipant}
+          onRemoveParticipant={removeParticipant}
+          onClose={() => setParticipantsPanelOpen(false)}
+        />
+      )}
     </>
   );
 }

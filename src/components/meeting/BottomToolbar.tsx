@@ -16,7 +16,6 @@ interface BottomToolbarProps {
   onToggleChat: () => void;
   onToggleReactions: () => void;
   onReaction: (emoji: string) => void;
-  // New props
   isRecording: boolean;
   recordingPending: boolean;
   onToggleRecording: () => void;
@@ -25,6 +24,11 @@ interface BottomToolbarProps {
   isHost: boolean;
   onToggleWhiteboard: () => void;
   whiteboardOpen: boolean;
+  // NEW
+  onToggleSecurity?: () => void;
+  onToggleParticipants?: () => void;
+  onShareLink?: () => void;
+  copiedLink?: boolean;
 }
 
 export default function BottomToolbar({
@@ -33,6 +37,7 @@ export default function BottomToolbar({
   isRecording, recordingPending, onToggleRecording,
   isScreenSharing, onToggleScreenShare,
   isHost, onToggleWhiteboard, whiteboardOpen,
+  onToggleSecurity, onToggleParticipants, onShareLink, copiedLink,
 }: BottomToolbarProps) {
   const [captionsOn, setCaptionsOn] = useState(false);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
@@ -54,10 +59,10 @@ export default function BottomToolbar({
 
         {/* Center */}
         <div className="flex items-center h-full gap-0.5 sm:gap-1 text-orbit-text-muted">
-          <ToolbarBtn label="Security">
+          <ToolbarBtn label="Security" onClick={onToggleSecurity}>
             <SecurityIcon />
           </ToolbarBtn>
-          <ToolbarBtn label="Participants" className="relative">
+          <ToolbarBtn label="Participants" onClick={onToggleParticipants} className="relative">
             <PeopleIcon />
             <span className="absolute -top-0.5 -right-0.5 bg-orbit-dark text-white text-[8px] font-bold px-1 rounded min-w-[14px] text-center leading-4">{participantCount}</span>
           </ToolbarBtn>
@@ -91,6 +96,16 @@ export default function BottomToolbar({
           {/* Captions */}
           <ToolbarBtn label="Captions" active={captionsOn} onClick={() => setCaptionsOn(p => !p)} activeColor="text-orbit-green">
             <CcIcon />
+          </ToolbarBtn>
+
+          {/* Share Link */}
+          <ToolbarBtn
+            label={copiedLink ? "Copied!" : "Share"}
+            active={!!copiedLink}
+            onClick={onShareLink}
+            activeColor="text-orbit-blue"
+          >
+            <LinkIcon />
           </ToolbarBtn>
 
           {/* Reactions */}
@@ -215,5 +230,11 @@ function CcIcon() { return (
 function CrownIcon() { return (
   <svg className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px]" fill="currentColor" viewBox="0 0 24 24">
     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+  </svg>
+);}
+
+function LinkIcon() { return (
+  <svg className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
   </svg>
 );}
