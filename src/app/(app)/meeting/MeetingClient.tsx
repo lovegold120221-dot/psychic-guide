@@ -11,6 +11,8 @@ import BottomToolbar from "@/components/meeting/BottomToolbar";
 import Whiteboard from "@/components/meeting/Whiteboard";
 import SecurityPanel from "@/components/meeting/SecurityPanel";
 import ParticipantsSidebar from "@/components/meeting/ParticipantsSidebar";
+import TranslationSidebar from "@/components/meeting/TranslationSidebar";
+import { useTranslation } from "@/lib/translation";
 import FloatingReactions from "@/components/meeting/FloatingReactions";
 import { useMeetingState, useReactionAnimation } from "@/lib/hooks";
 import { LAYOUT_OPTIONS } from "@/lib/constants";
@@ -78,7 +80,17 @@ function MeetingRoomUI() {
 
   const [participantsPanelOpen, setParticipantsPanelOpen] = useState(false);
   const [securityPanelOpen, setSecurityPanelOpen] = useState(false);
+  const [translateOpen, setTranslateOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  const {
+    isTranslating,
+    targetLanguage,
+    targetLangName,
+    entries: translationEntries,
+    toggleTranslation,
+    changeLanguage,
+  } = useTranslation();
 
   const handleCopyLink = useCallback(() => {
     const link = `${window.location.origin}/meeting?call=${callId}`;
@@ -190,6 +202,20 @@ function MeetingRoomUI() {
         copiedLink={copiedLink}
         layoutMode={layoutMode}
         onSwitchLayout={(mode: string) => switchLayout(mode as any)}
+        translateOpen={translateOpen}
+        onToggleTranslate={() => setTranslateOpen(!translateOpen)}
+      />
+
+      {/* Translation Sidebar */}
+      <TranslationSidebar
+        isOpen={translateOpen}
+        onClose={() => setTranslateOpen(false)}
+        isTranslating={isTranslating}
+        onToggleTranslate={toggleTranslation}
+        targetLanguage={targetLanguage}
+        onLanguageChange={changeLanguage}
+        entries={translationEntries}
+        targetLangName={targetLangName}
       />
 
       {/* Security Panel */}

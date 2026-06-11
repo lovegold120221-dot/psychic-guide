@@ -30,6 +30,8 @@ interface BottomToolbarProps {
   copiedLink?: boolean;
   layoutMode?: string;
   onSwitchLayout?: (mode: string) => void;
+  translateOpen?: boolean;
+  onToggleTranslate?: () => void;
 }
 
 export default function BottomToolbar({
@@ -40,6 +42,7 @@ export default function BottomToolbar({
   isHost, onToggleWhiteboard, whiteboardOpen,
   onToggleSecurity, onToggleParticipants, onShareLink, copiedLink,
   layoutMode, onSwitchLayout,
+  translateOpen, onToggleTranslate,
 }: BottomToolbarProps) {
   const [captionsOn, setCaptionsOn] = useState(false);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
@@ -101,6 +104,14 @@ export default function BottomToolbar({
   const btnBoard = (
     <ToolbarBtn label="Board" active={whiteboardOpen} onClick={onToggleWhiteboard} activeColor="text-orange-400">
       <BoardIcon />
+    </ToolbarBtn>
+  );
+
+  const btnTranslate = (
+    <ToolbarBtn label="Translate" active={!!translateOpen} onClick={onToggleTranslate} activeColor="text-blue-400">
+      <svg className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m0 4l-3 8m0 0H3m3 0h3m8-7l-3 8m6-8h3m-3 0h-3m3 0l-3 8m6-8h3" />
+      </svg>
     </ToolbarBtn>
   );
 
@@ -182,7 +193,7 @@ export default function BottomToolbar({
           {btnMic} {btnCam}
         </div>
         <div className="flex items-center h-full gap-1 text-orbit-text-muted justify-center flex-1">
-          {btnSecurity} {btnParticipants} {btnView} {btnChat} {btnShare} {btnRecord} {btnBoard} {btnCaptions} {btnLink} {btnSettings} {btnReactions} {btnHost}
+          {btnSecurity} {btnParticipants} {btnView} {btnChat} {btnShare} {btnRecord} {btnBoard} {btnTranslate} {btnCaptions} {btnLink} {btnSettings} {btnReactions} {btnHost}
         </div>
         <div className="flex items-center h-full gap-1 shrink-0">
           <Link href="/" className="bg-orbit-red hover:bg-red-700 active:bg-red-800 active:scale-95 text-white font-semibold text-sm px-4 py-1.5 rounded-lg transition-all duration-150 shadow-lg shadow-red-500/20">
@@ -212,7 +223,7 @@ export default function BottomToolbar({
         </div>
         {mobileExpanded && (
           <div className="flex flex-wrap items-center gap-0.5 px-1.5 pb-2 pt-1 text-orbit-text-muted border-t border-white/[0.04] bg-orbit-dark/50 animate-fade-in justify-start">
-            {btnShare} {btnRecord} {btnBoard} {btnReactions} {btnSecurity} {btnCaptions} {btnLink} {btnSettings} {btnHost}
+            {btnShare} {btnRecord} {btnBoard} {btnTranslate} {btnReactions} {btnSecurity} {btnCaptions} {btnLink} {btnSettings} {btnHost}
           </div>
         )}
       </div>
