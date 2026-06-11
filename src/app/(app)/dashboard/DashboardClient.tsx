@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import TitleBar from "@/components/ui/TitleBar";
 import Sidebar from "@/components/ui/Sidebar";
@@ -9,9 +9,44 @@ import Clock from "@/components/dashboard/Clock";
 import UpcomingMeetings from "@/components/dashboard/UpcomingMeetings";
 import CreateMeetingModal from "@/components/dashboard/CreateMeetingModal";
 
+interface MeetingData {
+  id: string;
+  meeting_id: string;
+  title: string;
+  time: string;
+  startTime: string;
+  endTime: string;
+  date: string;
+  password?: string;
+}
+
 export default function DashboardClient() {
   const { user, signOut } = useAuth();
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [meetings, setMeetings] = useState<MeetingData[]>([]);
+  const [meetingsLoading, setMeetingsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/meetings")
+      .then((res) => res.ok ? res.json() : { meetings: [] })
+      .then((data) => {
+        const mapped: MeetingData[] = (data.meetings || []).map((m: any) => ({
+          id: m.id,
+          meeting_id: m.meeting_id,
+          title: m.title,
+          time: m.start_time && m.end_time
+            ? `${m.start_time.slice(0, 5)} – ${m.end_time.slice(0, 5)}`
+            : "Anytime",
+          startTime: m.start_time || "",
+          endTime: m.end_time || "",
+          date: m.meeting_date || "",
+          password: m.passcode || undefined,
+        }));
+        setMeetings(mapped);
+      })
+      .catch(() => {})
+      .finally(() => setMeetingsLoading(false));
+  }, []);
 
   return (
     <>
@@ -84,7 +119,7 @@ export default function DashboardClient() {
               {/* Right */}
               <div className="flex-1 flex flex-col gap-5 sm:gap-6 min-w-0">
                 <Clock />
-                <UpcomingMeetings />
+                <UpcomingMeetings meetings={meetings} loading={meetingsLoading} />
               </div>
             </div>
           </div>

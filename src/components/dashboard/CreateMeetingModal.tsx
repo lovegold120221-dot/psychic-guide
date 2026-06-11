@@ -38,12 +38,26 @@ export default function CreateMeetingModal({
     return () => document.removeEventListener("keydown", handler);
   }, [isOpen, onClose]);
 
-  const handleStart = useCallback(() => {
+  const handleStart = useCallback(async () => {
     setIsStarting(true);
+    try {
+      // Create the meeting in Supabase
+      await fetch("/api/meetings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meeting_id: meetingId,
+          title: `${userName}'s Instant Meeting`,
+          host_id: user?.id,
+        }),
+      });
+    } catch {
+      // Non-blocking — meeting works even without DB save
+    }
     setTimeout(() => {
-      router.push("/meeting");
+      router.push(`/meeting?call=${meetingId}`);
     }, 800);
-  }, [router]);
+  }, [router, meetingId, userName, user?.id]);
 
   const handleCopyLink = useCallback(() => {
     copy(`https://orbit.vercel.app/join?mid=${meetingId.replace(/-/g, "")}`);

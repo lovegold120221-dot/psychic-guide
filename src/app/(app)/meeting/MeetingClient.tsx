@@ -1,72 +1,50 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useStreamVideo } from "@/lib/video";
+import { MeetingRoomProvider, useMeetingRoom } from "@/lib/meeting-store";
 import TitleBar from "@/components/ui/TitleBar";
 import VideoGrid from "@/components/meeting/VideoGrid";
 import ChatSidebar from "@/components/meeting/ChatSidebar";
 import BottomToolbar from "@/components/meeting/BottomToolbar";
 import FloatingReactions from "@/components/meeting/FloatingReactions";
 import { useMeetingState, useReactionAnimation } from "@/lib/hooks";
-import { useStreamChat } from "@/lib/stream";
 import { LAYOUT_OPTIONS } from "@/lib/constants";
-import type { Participant } from "@/lib/constants";
 
-export default function MeetingClient() {
+// ─── Inner — has access to MeetingRoom context ─────────────────
+
+function MeetingRoomUI() {
+  const {
+    videoConnected,
+    chatConnected,
+    chatMessages,
+    sendChatMessage,
+    sendReaction,
+    participantsCount,
+    toggleCamera,
+    toggleMic,
+    isCameraMuted,
+    isMicMuted,
+  } = useMeetingRoom();
+
   const { user } = useAuth();
-  const userId = user?.id || "anonymous";
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "You";
-  const userAvatar =
-    user?.user_metadata?.avatar_url ||
-    `https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&q=80`;
 
   const {
-    localMicMuted,
-    localCamOn,
     layoutMode,
     chatOpen,
     unreadChats,
     reactionsOpen,
     viewMenuOpen,
-    participants,
-    setParticipants,
-    toggleMic,
-    toggleCam,
     toggleChat,
     toggleReactions,
     toggleViewMenu,
     switchLayout,
+    setUnreadChats,
   } = useMeetingState();
 
   const { floatingReactions, triggerReaction } = useReactionAnimation();
-
-  // Initialize and update the current user in the participants list
-  useEffect(() => {
-    setParticipants((prev) => {
-      const exists = prev.find((p) => p.id === userId);
-      if (exists) {
-        return prev.map((p) =>
-          p.id === userId ? { ...p, muted: localMicMuted, hasVideo: localCamOn } : p
-        );
-      } else {
-        return [
-          ...prev,
-          {
-            id: userId,
-            name: userName,
-            img: userAvatar,
-            muted: localMicMuted,
-            active: true,
-            hasVideo: localCamOn,
-          },
-        ];
-      }
-    });
-  }, [userId, userName, userAvatar, localMicMuted, localCamOn, setParticipants]);
-
-  // Stream Chat integration
-  const { connectionState, messages: streamMessages, sendMessage, sendReaction } =
-    useStreamChat(userId, userName);
 
   // Listen for incoming Stream reactions
   useEffect(() => {
@@ -81,8 +59,8 @@ export default function MeetingClient() {
   }, [triggerReaction]);
 
   const handleSendMessage = useCallback(
-    async (text: string) => await sendMessage(text),
-    [sendMessage]
+    async (text: string) => await sendChatMessage(text),
+    [sendChatMessage]
   );
 
   const handleReaction = useCallback(
@@ -101,18 +79,12 @@ export default function MeetingClient() {
         status={
           <span
             className={`px-1.5 py-0.5 rounded text-[9px] font-bold border transition-colors ${
-              connectionState === "connected"
+              videoConnected
                 ? "text-orbit-green bg-green-900/40 border-orbit-green/50"
-                : connectionState === "connecting"
-                ? "text-yellow-500 bg-zinc-800 border-zinc-700"
-                : "text-zinc-400 bg-zinc-800 border-zinc-700"
+                : "text-yellow-500 bg-zinc-800 border-zinc-700"
             }`}
           >
-            {connectionState === "connected"
-              ? "Stream Live"
-              : connectionState === "connecting"
-              ? "Connecting..."
-              : "Offline"}
+            {videoConnected ? "Stream Live" : "Connecting..."}
           </span>
         }
       />
@@ -159,13 +131,11 @@ export default function MeetingClient() {
             )}
           </div>
 
-          {/* Video Grid */}
+          {/* Video Grid — now renders with Stream Video SDK participants */}
           <VideoGrid
             layoutMode={layoutMode}
-            participants={participants}
-            localMicMuted={localMicMuted}
-            localCamOn={localCamOn}
-            localUserId={userId}
+            localMicMuted={isMicMuted}
+            localCamOn={!isCameraMuted}
           />
 
           <FloatingReactions reactions={floatingReactions} />
@@ -175,26 +145,76 @@ export default function MeetingClient() {
         <ChatSidebar
           isOpen={chatOpen}
           onClose={toggleChat}
-          messages={streamMessages}
+          messages={chatMessages}
           onSendMessage={handleSendMessage}
-          connectionState={connectionState}
-          currentUserId={userId}
+          connectionState={chatConnected ? "connected" : "connecting"}
+          currentUserId={user?.id}
         />
       </div>
 
       <BottomToolbar
-        localMicMuted={localMicMuted}
-        localCamOn={localCamOn}
+        localMicMuted={isMicMuted}
+        localCamOn={!isCameraMuted}
         chatOpen={chatOpen}
         reactionsOpen={reactionsOpen}
         unreadChats={unreadChats}
-        participantCount={participants.length}
+        participantCount={participantsCount}
         onToggleMic={toggleMic}
-        onToggleCam={toggleCam}
+        onToggleCam={toggleCamera}
         onToggleChat={toggleChat}
         onToggleReactions={toggleReactions}
         onReaction={handleReaction}
       />
     </>
+  );
+}
+
+// ─── Outer — sets up Stream Video client ───────────────────────
+
+export default function MeetingClient() {
+  const { user } = useAuth();
+  const userId = user?.id || `anon-${Date.now()}`;
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
+  const [callId] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("call") || "orbit-main-room";
+    }
+    return "orbit-main-room";
+  });
+
+  const { client, connectionState } = useStreamVideo({ userId, userName });
+
+  if (connectionState === "error") {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-orbit-darker">
+        <div className="text-center max-w-sm px-6">
+          <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-white mb-2">Connection failed</h2>
+          <p className="text-sm text-zinc-400 mb-6">Could not connect to Stream Video. Please check your connection and try again.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-orbit-blue hover:bg-blue-500 text-white font-semibold text-sm px-6 py-3 rounded-xl transition active:scale-[0.98]"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <MeetingRoomProvider
+      client={client}
+      userId={userId}
+      userName={userName}
+      callId={callId}
+    >
+      <MeetingRoomUI />
+    </MeetingRoomProvider>
   );
 }

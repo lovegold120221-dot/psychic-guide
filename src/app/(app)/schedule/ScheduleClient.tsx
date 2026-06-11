@@ -54,7 +54,9 @@ export default function ScheduleClient() {
     setEndTime(`${eh.toString().padStart(2, "0")}:${em.toString().padStart(2, "0")}`);
   }, [startTime]);
 
-  const handleSchedule = useCallback(() => {
+  const [scheduleError, setScheduleError] = useState("");
+
+  const handleSchedule = useCallback(async () => {
     const formValid = validate({
       topic: (v) => {
         if (!v.trim()) return "Meeting topic is required";
@@ -73,11 +75,34 @@ export default function ScheduleClient() {
     if (!formValid || Object.keys(dtErrors).length > 0) return;
 
     setIsScheduling(true);
-    setTimeout(() => {
-      setIsScheduling(false);
+    setScheduleError("");
+
+    try {
+      const res = await fetch("/api/meetings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          meeting_id: meetingId,
+          title: values.topic.trim(),
+          description: values.description.trim(),
+          passcode: values.password.trim(),
+          meeting_date: date,
+          start_time: startTime,
+          end_time: endTime,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to schedule meeting");
+      }
+
       router.push("/dashboard");
-    }, 1500);
-  }, [validate, date, startTime, endTime, router]);
+    } catch (err: any) {
+      setScheduleError(err.message);
+      setIsScheduling(false);
+    }
+  }, [validate, date, startTime, endTime, meetingId, values.topic, values.description, values.password, router]);
 
   return (
     <AuthLayout title="Schedule Meeting" subtitle="Set up a meeting for later" backHref="/dashboard" backLabel="Dashboard">
@@ -185,6 +210,12 @@ export default function ScheduleClient() {
           }
           hint="Attendees will need this to join"
         />
+
+        {scheduleError && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400 animate-fade-in">
+            {scheduleError}
+          </div>
+        )}
 
         <button
           onClick={handleSchedule}
