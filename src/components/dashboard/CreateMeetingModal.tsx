@@ -154,14 +154,9 @@ export default function CreateMeetingModal({
                 }`}
               >
                 <div
-                  className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    usePersonalId ? "translate-x-4.5 left-0.5" : "left-0.5"
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    usePersonalId ? "translate-x-[18px]" : "translate-x-0"
                   }`}
-                  style={{
-                    transform: usePersonalId
-                      ? "translateX(18px)"
-                      : "translateX(0)",
-                  }}
                 />
               </div>
             </label>

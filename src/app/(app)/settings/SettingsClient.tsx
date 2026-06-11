@@ -153,6 +153,8 @@ export default function SettingsClient() {
                         min={0} max={100}
                         value={settings.studioTouch}
                         onChange={(e) => update({ studioTouch: parseInt(e.target.value) })}
+                        title="Studio Touch Intensity"
+                        aria-label="Studio Touch Intensity"
                         className="w-full accent-orbit-blue"
                       />
                       <div className="flex justify-between text-[10px] text-zinc-500">
@@ -199,8 +201,8 @@ export default function SettingsClient() {
                     {testTonePlaying && (
                       <div className="flex items-center gap-1">
                         <span className="w-1.5 h-4 bg-orbit-green rounded-full animate-pulse" />
-                        <span className="w-1.5 h-6 bg-orbit-green rounded-full animate-pulse" style={{ animationDelay: "0.2s" }} />
-                        <span className="w-1.5 h-3 bg-orbit-green/50 rounded-full animate-pulse" style={{ animationDelay: "0.4s" }} />
+                        <span className="w-1.5 h-6 bg-orbit-green rounded-full animate-pulse [animation-delay:0.2s]" />
+                        <span className="w-1.5 h-3 bg-orbit-green/50 rounded-full animate-pulse [animation-delay:0.4s]" />
                       </div>
                     )}
                   </div>
@@ -246,6 +248,8 @@ export default function SettingsClient() {
                       type="range" min={5} max={30}
                       value={settings.blurRadius}
                       onChange={(e) => update({ blurRadius: parseInt(e.target.value) })}
+                      title="Blur Radius"
+                      aria-label="Blur Radius"
                       className="w-full accent-orbit-blue"
                     />
                     <div className="flex justify-between text-[10px] text-zinc-500 mt-1">
@@ -359,8 +363,7 @@ function LivePreview({ settings, selectedCam, compact = false }: { settings: Vid
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
-          style={{ transform: settings.mirror ? "scaleX(-1)" : "none" }}
+          className={`w-full h-full object-cover ${settings.mirror ? "-scale-x-100" : ""}`}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
@@ -442,6 +445,8 @@ function SelectField({ label, value, onChange, options }: { label: string; value
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        title={label}
+        aria-label={label}
         className="w-full bg-orbit-darker border border-zinc-700/50 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-orbit-blue transition appearance-none"
       >
         {options.map((opt) => (
