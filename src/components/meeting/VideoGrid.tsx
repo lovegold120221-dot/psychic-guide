@@ -63,7 +63,7 @@ export default function VideoGrid({ layoutMode, localMicMuted, localCamOn }: Vid
               participant={screenSharer}
               trackType="screenShareTrack"
               playsInline
-              muted={screenSharer.isLocal}
+              muted={(screenSharer as any).isLocal}
             />
             <div className="absolute bottom-2 left-2 px-2 py-1 rounded-lg bg-black/70 backdrop-blur-sm text-[11px] text-white flex items-center gap-2">
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,10 +135,11 @@ export default function VideoGrid({ layoutMode, localMicMuted, localCamOn }: Vid
 function ParticipantTile({ participant, className = "", isSpeaking = false, isHost = false }: {
   participant: any; className?: string; isSpeaking?: boolean; isHost?: boolean;
 }) {
-  const isLocal = participant.isLocal;
-  const hasVideo = participant.videoStream !== undefined && participant.videoStream !== null;
-  const name = participant.name || participant.userId || "Unknown";
-  const isMuted = !participant.isAudioEnabled;
+  const p = participant as any;
+  const isLocal = p.isLocal;
+  const hasVideo = p.videoStream !== undefined && p.videoStream !== null;
+  const name = p.name || p.userId || "Unknown";
+  const isMuted = !p.isAudioEnabled;
   const activeBorder = isSpeaking ? "active-speaker" : "";
 
   if (!hasVideo) {
@@ -161,10 +162,11 @@ function ParticipantTile({ participant, className = "", isSpeaking = false, isHo
 // ─── Full-screen single ──────────────────────────────────────
 
 function FullScreenParticipantTile({ participant, isHost = false }: { participant: any; isHost?: boolean }) {
-  const hasVideo = participant.videoStream !== undefined && participant.videoStream !== null;
-  const name = participant.name || participant.userId || "Unknown";
-  const isMuted = !participant.isAudioEnabled;
-  const isLocal = participant.isLocal;
+  const p = participant as any;
+  const hasVideo = p.videoStream !== undefined && p.videoStream !== null;
+  const name = p.name || p.userId || "Unknown";
+  const isMuted = !p.isAudioEnabled;
+  const isLocal = p.isLocal;
 
   if (!hasVideo) {
     return (

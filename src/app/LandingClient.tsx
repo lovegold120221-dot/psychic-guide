@@ -1,188 +1,120 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import CreateMeetingModal from "@/components/dashboard/CreateMeetingModal";
-import TitleBar from "@/components/ui/TitleBar";
+
+const HERO_IMG = "https://images.unsplash.com/photo-1516387938699-a93567ec168e?auto=format&fit=crop&w=1920&q=80";
+const FEAT_IMG_1 = "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?auto=format&fit=crop&w=1200&q=80";
+const FEAT_IMG_2 = "https://images.unsplash.com/photo-1611162616475-46b635cb6868?auto=format&fit=crop&w=1200&q=80";
+const FEAT_IMG_3 = "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80";
 
 export default function LandingClient() {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [createOpen, setCreateOpen] = useState(false);
-  const [joinId, setJoinId] = useState("");
-  const [joinError, setJoinError] = useState("");
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
-  // If user is already logged in, skip the landing
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace("/dashboard");
-    }
-  }, [user, loading, router]);
-
-  const handleJoin = useCallback(() => {
-    const digits = joinId.replace(/\D/g, "");
-    if (digits.length < 9) {
-      setJoinError("Meeting ID must be 9 digits");
-      return;
-    }
-    router.push(`/join?mid=${digits}`);
-  }, [joinId, router]);
-
-  const formatJoinId = useCallback((raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 9);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }, []);
-
-  // Still loading — show nothing flashy
-  if (loading || !mounted) {
-    return (
-      <div className="h-full w-full flex items-center justify-center bg-orbit-darker">
-        <svg className="w-6 h-6 animate-spin text-zinc-600" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      </div>
-    );
-  }
-
-  // User is authenticated — will redirect
-  if (user) return null;
+  if (loading || !mounted) return null;
+  if (user) { router.replace("/dashboard"); return null; }
 
   return (
-    <div className="h-full w-full flex flex-col bg-[#0c0c0d]">
-      <TitleBar title="Orbit" showControls={false} />
-
-      {/* Stage area — mimics the mockup's video stage layout */}
-      <main className="flex-1 flex items-center justify-center relative overflow-hidden">
-        {/* Decorative topbar strip (like the mockup's topbar) */}
-        <div className="absolute top-0 inset-x-0 h-12 border-b border-white/[0.04] flex items-center justify-between px-5 z-10">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 text-[11px] text-zinc-600 font-medium tracking-wide">
-              <svg className="w-3.5 h-3.5 text-zinc-700" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2l7 3v6c0 4.5-3 8.3-7 9.5C8 19.3 5 15.5 5 11V5l7-3z" fill="#1a1a1a" stroke="currentColor" strokeWidth="1.2"/>
-                <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              End-to-end encrypted
-            </span>
-            <span className="w-px h-3 bg-white/[0.06]" />
-            <span className="text-[11px] text-zinc-600 font-medium">Orbit · v1.0</span>
+    <div className="h-full w-full overflow-y-auto overscroll-contain bg-[#f5f5f7] dark:bg-black text-black dark:text-white">
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-black/80 border-b border-black/[0.04]">
+        <div className="max-w-7xl mx-auto px-6 h-12 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 32 32" width="20" height="20" fill="none" className="text-blue-600">
+              <ellipse cx="16" cy="16" rx="13" ry="6" stroke="currentColor" strokeWidth="2.4" transform="rotate(-28 16 16)"/>
+              <circle cx="16" cy="16" r="3.4" fill="currentColor"/>
+              <circle cx="26.2" cy="10.5" r="1.7" fill="currentColor"/>
+            </svg>
+            <span className="font-semibold text-sm tracking-tight">Orbit</span>
           </div>
+          <div className="flex items-center gap-4">
+            <Link href="/auth/login" className="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition">Sign In</Link>
+            <Link href="/auth/signup" className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full transition active:scale-95">Sign Up</Link>
+          </div>
+        </div>
+      </nav>
 
-          <div className="flex items-center gap-3">
+      {/* Hero */}
+      <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0">
+          <img src={HERO_IMG} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+        </div>
+        <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.05]">
+            Video meetings.<br/><span className="text-blue-400">Reimagined.</span>
+          </h1>
+          <p className="mt-6 text-lg sm:text-xl text-zinc-300 max-w-xl mx-auto leading-relaxed font-light">
+            Crystal-clear video, real-time chat, and enterprise-grade security — all in a beautifully simple interface.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-4">
             <Link
               href="/auth/login"
-              className="text-[11px] text-zinc-500 hover:text-white font-medium transition px-2 py-1 rounded-lg hover:bg-white/[0.04]"
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-3.5 rounded-full transition-all active:scale-[0.97] shadow-lg shadow-blue-600/30"
             >
-              Sign In
+              Try Now
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
             </Link>
             <Link
               href="/auth/signup"
-              className="text-[11px] font-semibold text-white bg-orbit-blue/90 hover:bg-orbit-blue px-3 py-1.5 rounded-lg transition active:scale-95"
+              className="inline-flex items-center gap-2 text-white/80 hover:text-white font-medium text-base px-8 py-3.5 rounded-full border border-white/20 hover:border-white/40 transition active:scale-[0.97]"
             >
-              Sign Up Free
+              Create Account
             </Link>
           </div>
+          <p className="mt-6 text-xs text-zinc-500">No credit card required · Free for up to 100 participants</p>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-24 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-20">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Everything you need.</h2>
+          <p className="mt-4 text-base sm:text-lg text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto">Professional video conferencing, built for teams of every size.</p>
         </div>
 
-        {/* Ambient — subtle, like the mockup */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-orbit-blue/[0.02] rounded-full blur-[120px]" />
-        </div>
-
-        {/* Hero — compact, no splash, no marketing fluff */}
-        <div className="relative z-10 w-full max-w-lg mx-auto px-6 -mt-8">
-          <div className="text-center mb-9">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <svg viewBox="0 0 32 32" width="24" height="24" fill="none" className="text-[#7dd44a]">
-                <ellipse cx="16" cy="16" rx="13" ry="6" stroke="currentColor" strokeWidth="2.2" transform="rotate(-28 16 16)"/>
-                <circle cx="16" cy="16" r="3.4" fill="currentColor"/>
-                <circle cx="26.2" cy="10.5" r="1.7" fill="currentColor"/>
-              </svg>
-              <span className="text-sm font-semibold text-white/80 tracking-wide">Orbit Meeting</span>
-            </div>
-            <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-              Secure video meetings. Start instantly — no account needed to join.
-            </p>
-          </div>
-
-          {/* Action panel — glass card, single-column, clean */}
-          <div className="bg-[#141416]/90 backdrop-blur-xl border border-white/[0.06] rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
-            {/* Quick Join */}
-            <div className="p-5 pb-4 border-b border-white/[0.04]">
-              <div className="flex gap-2.5">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={joinId}
-                    onChange={(e) => { setJoinId(formatJoinId(e.target.value)); setJoinError(""); }}
-                    onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-                    placeholder="Enter meeting ID"
-                    inputMode="numeric"
-                    maxLength={11}
-                    className="w-full bg-[#0c0c0d] border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 outline-none transition focus:border-[#7dd44a]/60 focus:ring-1 focus:ring-[#7dd44a]/20"
-                  />
-                  {joinError && (
-                    <p className="absolute -bottom-5 left-1 text-[10px] text-red-400">{joinError}</p>
-                  )}
-                </div>
-                <button
-                  onClick={handleJoin}
-                  className="bg-[#7dd44a] hover:bg-[#6dc43a] active:bg-[#5db42a] text-[#0c0c0d] font-semibold text-sm px-5 py-3 rounded-xl transition active:scale-[0.97] shrink-0"
-                >
-                  Join
-                </button>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { img: FEAT_IMG_1, title: "Real-time Chat", desc: "Built-in messaging powered by Stream. Send global messages or DM participants directly." },
+            { img: FEAT_IMG_2, title: "Screen Sharing", desc: "Share your screen with audio. Present documents, code, or designs in crystal clarity." },
+            { img: FEAT_IMG_3, title: "Virtual Backgrounds", desc: "Blur your background, use custom images, or apply Studio Touch beautification." },
+          ].map((f, i) => (
+            <div key={i} className="group">
+              <div className="overflow-hidden rounded-2xl mb-5 bg-zinc-100 dark:bg-zinc-900">
+                <img src={f.img} alt={f.title} className="w-full aspect-[4/3] object-cover group-hover:scale-[1.02] transition duration-700" />
               </div>
-              <p className="text-[10px] text-zinc-600 mt-3 ml-1">xxx-xxx-xxx · no account required</p>
+              <h3 className="text-lg font-semibold">{f.title}</h3>
+              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{f.desc}</p>
             </div>
+          ))}
+        </div>
+      </section>
 
-            {/* Action links */}
-            <div className="flex">
-              <button
-                onClick={() => setCreateOpen(true)}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.03] transition border-r border-white/[0.04] active:bg-white/[0.06]"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                New Meeting
-              </button>
-              <Link
-                href="/auth/signup"
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/[0.03] transition active:bg-white/[0.06]"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Schedule
-              </Link>
-            </div>
+      {/* CTA */}
+      <section className="py-24 px-6 bg-black text-white text-center">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Start meeting in seconds.</h2>
+          <p className="mt-4 text-base text-zinc-400 max-w-md mx-auto">No downloads, no setup. Just click and join.</p>
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <Link href="/auth/signup" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base px-8 py-3.5 rounded-full transition active:scale-[0.97]">Get Started Free</Link>
+            <Link href="/auth/login" className="text-zinc-300 hover:text-white font-medium text-base px-8 py-3.5 rounded-full border border-zinc-700 hover:border-zinc-500 transition">Sign In</Link>
           </div>
         </div>
+      </section>
 
-        {/* Bottom bar — like the mockup's control bar silhouette */}
-        <div className="absolute bottom-0 inset-x-0 h-16 border-t border-white/[0.03] flex items-center justify-center gap-6 px-5 z-10">
-          <span className="flex items-center gap-1.5 text-[10px] text-zinc-700">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            No time limits
-          </span>
-          <span className="w-px h-3 bg-white/[0.04]" />
-          <span className="flex items-center gap-1.5 text-[10px] text-zinc-700">
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/><path d="M8.5 14a4 4 0 007 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-            Up to 100 participants
-          </span>
+      {/* Footer */}
+      <footer className="py-8 px-6 border-t border-black/[0.04] dark:border-white/[0.04]">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-zinc-400">
+          <span>Orbit Meeting — built by Eburon AI</span>
+          <span>Powered by Stream &amp; Supabase</span>
         </div>
-      </main>
-
-      <CreateMeetingModal isOpen={createOpen} onClose={() => setCreateOpen(false)} />
+      </footer>
     </div>
   );
 }
