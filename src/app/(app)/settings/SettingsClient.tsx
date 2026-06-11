@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/lib/auth-context";
 import TitleBar from "@/components/ui/TitleBar";
-import Sidebar from "@/components/ui/Sidebar";
+import InitialAvatar from "@/components/shared/InitialAvatar";
 import {
   loadSettings, saveSettings,
   getVideoDevices, getAudioInputDevices, getAudioOutputDevices,
@@ -25,6 +25,7 @@ const BG_IMAGES: { key: BackgroundImage; label: string }[] = [
 
 export default function SettingsClient() {
   const { user, signOut } = useAuth();
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
   const [tab, setTab] = useState<Tab>("video");
   const [settings, setSettings] = useState<VideoProcessorSettings>(loadSettings);
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([]);
@@ -96,10 +97,28 @@ export default function SettingsClient() {
 
   return (
     <>
-      <TitleBar title="Settings" />
-      <div className="flex-1 w-full h-full flex overflow-hidden">
-        <Sidebar user={user} onSignOut={signOut} />
-        <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-20 md:pb-8">
+      <TitleBar
+        title="Settings"
+        logo
+        rightContent={
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="text-xs text-zinc-400 font-medium">{displayName}</span>
+              <span className="text-[10px] text-zinc-600">{user?.email}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <InitialAvatar name={displayName} size={28} />
+              <button onClick={signOut} className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition active:scale-90" title="Sign out">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+      />
+      <div className="flex-1 w-full h-full overflow-y-auto pb-20 md:pb-8">
+        <div className="max-w-3xl mx-auto p-4 sm:p-8">
           <div className="max-w-3xl mx-auto">
             <h1 className="text-xl sm:text-2xl font-bold text-white mb-6">Settings</h1>
 
@@ -303,8 +322,7 @@ export default function SettingsClient() {
               </div>
             )}
           </div>
-        </main>
-      </div>
+        </div>
     </>
   );
 }
