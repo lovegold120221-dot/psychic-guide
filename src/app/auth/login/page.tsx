@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
@@ -9,12 +10,19 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-white text-xs mb-8 transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Orbit
+        </Link>
+
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="w-16 h-16 rounded-full bg-orbit-panel border border-zinc-700/50 p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center mb-5">
             <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
-          <h1 className="text-2xl font-bold text-white">Welcome back to Orbit</h1>
-          <p className="text-sm text-zinc-400 mt-2">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-white">Welcome back</h1>
+          <p className="text-sm text-zinc-400 mt-2">Sign in to your Orbit account</p>
         </div>
 
         <Suspense

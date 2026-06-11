@@ -108,6 +108,7 @@ export default function ScheduleClient() {
       <TitleBar
         title="Schedule Meeting"
         logo
+        backTo={{ href: "/dashboard", label: "Dashboard" }}
         rightContent={
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2">

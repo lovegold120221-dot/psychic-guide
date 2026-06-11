@@ -8,6 +8,7 @@ interface TitleBarProps {
   showControls?: boolean;
   logo?: boolean;
   rightContent?: React.ReactNode;
+  backTo?: { href: string; label: string };
 }
 
 export default function TitleBar({
@@ -16,15 +17,27 @@ export default function TitleBar({
   showControls = true,
   logo,
   rightContent,
+  backTo,
 }: TitleBarProps) {
   return (
-    <div className="orbit-title-bar h-10 sm:h-9 w-full flex items-center sticky top-0 shrink-0 border-b border-black/40 z-50 safe-top px-3">
+    <div className="orbit-title-bar h-11 sm:h-10 w-full flex items-center sticky top-0 shrink-0 border-b border-black/40 z-50 safe-top px-3">
       {/* Left section */}
-      <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         {logo && (
           <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
             <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit" className="w-6 h-6" />
             <span className="font-bold text-sm text-white tracking-tight hidden sm:inline">Orbit</span>
+          </Link>
+        )}
+        {backTo && (
+          <Link
+            href={backTo.href}
+            className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition text-xs font-medium shrink-0"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {backTo.label}
           </Link>
         )}
         {showControls && (
@@ -39,7 +52,7 @@ export default function TitleBar({
       </div>
 
       {/* Center title */}
-      <div className="text-orbit-text-muted text-[11px] sm:text-xs font-medium tracking-wide flex items-center gap-2 shrink-0">
+      <div className="text-zinc-400 text-[11px] sm:text-xs font-medium tracking-wide flex items-center gap-2 shrink-0">
         {title}
         {status && status}
       </div>
