@@ -9,6 +9,7 @@ import GlassCard from "@/components/shared/GlassCard";
 import FormField from "@/components/shared/FormField";
 import VideoPreview from "@/components/shared/VideoPreview";
 import { useFormState, useCopyToClipboard } from "@/lib/hooks";
+import MobileNav from "@/components/ui/MobileNav";
 
 export default function JoinClient() {
   const router = useRouter();
@@ -68,6 +69,7 @@ export default function JoinClient() {
   }, [formatMeetingId, setValue]);
 
   return (
+    <>
     <AuthLayout
       title="Join Meeting"
       subtitle="Enter the meeting ID shared by the host"
@@ -236,5 +238,7 @@ export default function JoinClient() {
         </p>
       </GlassCard>
     </AuthLayout>
+    <MobileNav />
+    </>
   );
 }

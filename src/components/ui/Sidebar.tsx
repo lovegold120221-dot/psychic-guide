@@ -47,9 +47,11 @@ export default function Sidebar({ user, onSignOut }: SidebarProps) {
   return (
     <aside className="hidden md:flex orbit-sidebar w-[240px] h-full border-r border-black/50 flex-col pt-6 shrink-0">
       {/* Logo */}
-      <Link href="/dashboard" className="px-6 mb-8 flex items-center gap-3">
-        <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit Logo" className="w-8 h-8" />
-        <span className="font-bold text-xl tracking-tight text-white">Orbit</span>
+      <Link href="/dashboard" className="px-6 mb-8 flex items-center gap-3 group">
+        <div className="w-11 h-11 rounded-full bg-orbit-panel border border-zinc-700/50 p-2 shadow-[0_0_15px_rgba(0,0,0,0.5)] flex items-center justify-center transform group-hover:scale-105 transition-all">
+          <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit Logo" className="w-full h-full object-contain drop-shadow-md" />
+        </div>
+        <span className="font-bold text-2xl tracking-tight text-white">Orbit</span>
       </Link>
 
       {/* Nav */}

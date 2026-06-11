@@ -65,19 +65,22 @@ export function useStreamChat(userId: string, userName: string) {
       await meetingChannel.watch();
       channelRef.current = meetingChannel;
 
-      // Track members
+      // Track members (deduplicated by userId)
       const updateUsers = () => {
         const membersMap: any = meetingChannel.state.members;
+        const seen = new Set<string>();
         const chatUsers: ChatUserInfo[] = [];
         if (membersMap && typeof membersMap === "object") {
           const entries = membersMap instanceof Map
             ? Array.from(membersMap.values())
             : Object.values(membersMap);
           entries.forEach((member: any) => {
-            if (member.user?.id && member.user.id !== userId) {
+            const id = member.user?.id;
+            if (id && id !== userId && !seen.has(id)) {
+              seen.add(id);
               chatUsers.push({
-                id: member.user.id,
-                name: member.user.name || member.user.id,
+                id,
+                name: member.user.name || id,
                 online: member.user.online || false,
               });
             }

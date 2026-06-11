@@ -244,10 +244,12 @@ function MeetingRoomUI() {
 
 // ─── Outer ──────────────────────────────────────────────────────
 
+import { createClient } from "@/lib/supabase/client";
+
 export default function MeetingClient() {
-  const { user } = useAuth();
-  const userId = user?.id || `anon-${Date.now()}`;
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
+  const { user, loading } = useAuth();
+  const [anonId] = useState(() => `anon-${Math.random().toString(36).substring(2, 10)}`);
+  
   const [callId] = useState(() => {
     if (typeof window !== "undefined") {
       return new URLSearchParams(window.location.search).get("call") || "orbit-main-room";
@@ -255,7 +257,40 @@ export default function MeetingClient() {
     return "orbit-main-room";
   });
 
+  const [hostId, setHostId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!callId) return;
+    const supabase = createClient();
+    const fetchHost = async () => {
+      const { data, error } = await supabase.from("orbit_meetings").select("host_id").eq("meeting_id", callId).single();
+      if (data?.host_id) {
+        setHostId(data.host_id);
+      } else if (error) {
+        console.error("Failed to fetch host", error);
+      }
+    };
+    fetchHost();
+  }, [callId]);
+
+  const userId = user?.id || anonId;
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
+
   const { client, connectionState } = useStreamVideo({ userId, userName });
+
+  if (loading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-orbit-darker">
+        <div className="text-center">
+          <svg className="w-8 h-8 animate-spin text-orbit-blue mx-auto mb-4" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <p className="text-sm text-zinc-500">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (connectionState === "error") {
     return (
@@ -275,7 +310,7 @@ export default function MeetingClient() {
   }
 
   return (
-    <MeetingRoomProvider client={client} userId={userId} userName={userName} callId={callId}>
+    <MeetingRoomProvider client={client} userId={userId} userName={userName} callId={callId} hostId={hostId}>
       <MeetingRoomUI />
     </MeetingRoomProvider>
   );

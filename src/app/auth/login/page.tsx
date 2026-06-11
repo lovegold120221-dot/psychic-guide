@@ -9,12 +9,10 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <img
-            src="https://eburon.ai/icon-eburon.svg"
-            alt="Orbit"
-            className="w-12 h-12 mx-auto mb-4"
-          />
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-orbit-panel border border-zinc-700/50 p-3 shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center mb-5">
+            <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit Logo" className="w-full h-full object-contain drop-shadow-md" />
+          </div>
           <h1 className="text-2xl font-bold text-white">Welcome back to Orbit</h1>
           <p className="text-sm text-zinc-400 mt-2">Sign in to your account</p>
         </div>

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import TitleBar from "@/components/ui/TitleBar";
-import MobileNav from "@/components/ui/MobileNav";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -69,8 +68,6 @@ export default function AuthLayout({
           {children}
         </div>
       </div>
-
-      <MobileNav />
     </>
   );
 }

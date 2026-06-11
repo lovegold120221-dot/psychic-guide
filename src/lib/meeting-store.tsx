@@ -36,6 +36,7 @@ interface MeetingRoomValue {
   isHost: boolean;
   participants: any[];
   callId: string;
+  hostId: string | null;
 
   // Camera / Mic
   toggleCamera: () => void;
@@ -79,6 +80,7 @@ function MeetingRoomInner({
   sendChatMessage,
   sendReaction,
   callId,
+  hostId,
 }: {
   children: ReactNode;
   chatMessages: StreamChatMessage[];
@@ -87,6 +89,7 @@ function MeetingRoomInner({
   sendChatMessage: (text: string, targetUserId?: string) => Promise<boolean>;
   sendReaction: (emoji: string, sender: string) => Promise<boolean>;
   callId: string;
+  hostId: string | null;
 }) {
   const call = useCall();
   const {
@@ -107,7 +110,7 @@ function MeetingRoomInner({
     isAwaitingResponse: recordingPending,
   } = useToggleCallRecording();
 
-  const isHost = localParticipant?.roles?.includes("host") ?? false;
+  const isHost = (hostId && localParticipant?.userId === hostId) || localParticipant?.roles?.includes("host") || localParticipant?.roles?.includes("admin") || false;
   const isScreenSharing = participants.some((p) => p.userId === localParticipant?.userId && !!p.screenShareStream);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
 
@@ -158,11 +161,12 @@ function MeetingRoomInner({
         chatUsers,
         sendChatMessage,
         sendReaction,
-        participantsCount: participants.length,
         participants,
+        participantsCount: participants.length,
         callState,
         isHost,
         callId,
+        hostId,
         toggleCamera: () => (camera.enabled ? camera.disable() : camera.enable()),
         toggleMic: () => (microphone.enabled ? microphone.disable() : microphone.enable()),
         isCameraMuted: !camera.enabled,
@@ -193,6 +197,7 @@ function CallCreator({
   chatUsers,
   sendChatMessage,
   sendReaction,
+  hostId,
 }: {
   callId: string;
   children: ReactNode;
@@ -201,6 +206,7 @@ function CallCreator({
   chatUsers: ChatUser[];
   sendChatMessage: (text: string, targetUserId?: string) => Promise<boolean>;
   sendReaction: (emoji: string, sender: string) => Promise<boolean>;
+  hostId: string | null;
 }) {
   const client = useStreamVideoClient();
   const [call, setCall] = useState<any>(null);
@@ -257,6 +263,7 @@ function CallCreator({
         chatUsers={chatUsers}
         sendChatMessage={sendChatMessage}
         sendReaction={sendReaction}
+        hostId={hostId}
       >
         {children}
       </MeetingRoomInner>
@@ -271,10 +278,11 @@ interface Props {
   userId: string;
   userName: string;
   callId: string;
+  hostId: string | null;
   children: ReactNode;
 }
 
-export function MeetingRoomProvider({ client, userId, userName, callId, children }: Props) {
+export function MeetingRoomProvider({ client, userId, userName, callId, hostId, children }: Props) {
   const {
     connectionState: chatConnected,
     messages: chatMessages,
@@ -306,6 +314,7 @@ export function MeetingRoomProvider({ client, userId, userName, callId, children
         chatUsers={chatUsers}
         sendChatMessage={sendChatMessage}
         sendReaction={sendReaction}
+        hostId={hostId}
       >
         {children}
       </CallCreator>

@@ -42,112 +42,133 @@ export default function BottomToolbar({
   const [captionsOn, setCaptionsOn] = useState(false);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
 
+  const btnMic = (
+    <ToolbarBtn active={!localMicMuted} label={localMicMuted ? "Unmute" : "Mute"} onClick={onToggleMic} activeColor="text-white">
+      <MicIcon />
+      {localMicMuted && <Slash />}
+    </ToolbarBtn>
+  );
+
+  const btnCam = (
+    <ToolbarBtn active={localCamOn} label={localCamOn ? "Stop Video" : "Start Video"} onClick={onToggleCam} activeColor="text-white">
+      <CamIcon />
+      {!localCamOn && <Slash />}
+    </ToolbarBtn>
+  );
+
+  const btnSecurity = (
+    <ToolbarBtn label="Security" onClick={onToggleSecurity}>
+      <SecurityIcon />
+    </ToolbarBtn>
+  );
+
+  const btnParticipants = (
+    <ToolbarBtn label="Participants" onClick={onToggleParticipants} className="relative">
+      <PeopleIcon />
+      <span className="absolute -top-0.5 -right-0.5 bg-orbit-dark text-white text-[8px] font-bold px-1 rounded min-w-[14px] text-center leading-4">{participantCount}</span>
+    </ToolbarBtn>
+  );
+
+  const btnChat = (
+    <ToolbarBtn label="Chat" active={chatOpen} onClick={onToggleChat} activeColor="text-white" className="relative">
+      <ChatIcon />
+      {unreadChats > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />}
+    </ToolbarBtn>
+  );
+
+  const btnShare = (
+    <ToolbarBtn label="Share" active={isScreenSharing} onClick={onToggleScreenShare} activeColor="text-[#23d959]" hoverBg="hover:bg-[#23d959]/10">
+      <ShareIcon />
+    </ToolbarBtn>
+  );
+
+  const btnRecord = (
+    <ToolbarBtn label={isRecording ? "Stop Rec" : "Record"} active={isRecording} onClick={onToggleRecording} activeColor="text-red-400" disabled={recordingPending}>
+      <RecordIcon />
+      {isRecording && <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
+    </ToolbarBtn>
+  );
+
+  const btnBoard = (
+    <ToolbarBtn label="Board" active={whiteboardOpen} onClick={onToggleWhiteboard} activeColor="text-orange-400">
+      <BoardIcon />
+    </ToolbarBtn>
+  );
+
+  const btnCaptions = (
+    <ToolbarBtn label="Captions" active={captionsOn} onClick={() => setCaptionsOn(p => !p)} activeColor="text-orbit-green">
+      <CcIcon />
+    </ToolbarBtn>
+  );
+
+  const btnLink = (
+    <ToolbarBtn label={copiedLink ? "Copied!" : "Share"} active={!!copiedLink} onClick={onShareLink} activeColor="text-orbit-blue">
+      <LinkIcon />
+    </ToolbarBtn>
+  );
+
+  const btnSettings = (
+    <Link href="/settings" className="flex flex-col items-center justify-center w-[44px] sm:w-[50px] h-[48px] sm:h-[54px] rounded-xl native-btn-soft hover:bg-white/[0.06] transition-all duration-150 text-orbit-text-muted shrink-0">
+      <svg className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={1.5} />
+      </svg>
+      <span className="text-[8px] sm:text-[9px] font-medium leading-tight mt-0.5">Settings</span>
+    </Link>
+  );
+
+  const btnReactions = <Reactions isOpen={reactionsOpen} onToggle={onToggleReactions} onReaction={onReaction} />;
+
+  const btnHost = isHost ? (
+    <div className="relative">
+      <ToolbarBtn label="Host" active={hostMenuOpen} onClick={() => setHostMenuOpen(p => !p)} activeColor="text-amber-400">
+        <CrownIcon />
+      </ToolbarBtn>
+      {hostMenuOpen && (
+        <div className="absolute bottom-full right-0 mb-2 w-48 bg-orbit-panel border border-zinc-700 rounded-xl shadow-2xl py-1 z-40 animate-fade-in overflow-hidden">
+          <div className="px-4 py-2 text-[10px] text-zinc-400 font-semibold border-b border-zinc-700">Host Controls</div>
+          <button onClick={() => { setHostMenuOpen(false); onToggleWhiteboard(); }} className="w-full text-left px-4 py-2.5 text-xs text-zinc-300 hover:bg-white/5 transition flex items-center gap-2">
+            <BoardIcon /> Whiteboard
+          </button>
+          <button onClick={() => { setHostMenuOpen(false); onToggleRecording(); }} className="w-full text-left px-4 py-2.5 text-xs text-zinc-300 hover:bg-white/5 transition flex items-center gap-2">
+            <RecordIcon /> {isRecording ? "Stop Recording" : "Record Meeting"}
+          </button>
+          <div className="border-t border-zinc-700 my-1" />
+          <div className="px-4 py-2 text-[10px] text-zinc-500">Lock meeting, mute all — coming soon</div>
+        </div>
+      )}
+    </div>
+  ) : null;
+
   return (
-    <div className="orbit-toolbar h-auto min-h-[60px] sm:h-[64px] w-full shrink-0 sticky bottom-0 z-30 border-t border-black/50 safe-bottom">
-      <div className="flex items-center justify-between px-1.5 sm:px-3 h-full overflow-x-auto overscroll-contain scrollbar-none gap-0.5 sm:gap-1">
-        {/* Left — Mic + Camera */}
-        <div className="flex items-center h-full gap-0.5 sm:gap-1 shrink-0">
-          <ToolbarBtn active={!localMicMuted} label={localMicMuted ? "Unmute" : "Mute"} onClick={onToggleMic} activeColor="text-white">
-            <MicIcon />
-            {localMicMuted && <Slash />}
-          </ToolbarBtn>
-          <ToolbarBtn active={localCamOn} label={localCamOn ? "Stop Video" : "Start Video"} onClick={onToggleCam} activeColor="text-white">
-            <CamIcon />
-            {!localCamOn && <Slash />}
-          </ToolbarBtn>
-        </div>
-
-        {/* Center */}
-        <div className="flex items-center h-full gap-0.5 sm:gap-1 text-orbit-text-muted">
-          <ToolbarBtn label="Security" onClick={onToggleSecurity}>
-            <SecurityIcon />
-          </ToolbarBtn>
-          <ToolbarBtn label="Participants" onClick={onToggleParticipants} className="relative">
-            <PeopleIcon />
-            <span className="absolute -top-0.5 -right-0.5 bg-orbit-dark text-white text-[8px] font-bold px-1 rounded min-w-[14px] text-center leading-4">{participantCount}</span>
-          </ToolbarBtn>
-          <ToolbarBtn label="Chat" active={chatOpen} onClick={onToggleChat} activeColor="text-white" className="relative">
-            <ChatIcon />
-            {unreadChats > 0 && <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full" />}
-          </ToolbarBtn>
-
-          {/* Share Screen */}
-          <ToolbarBtn label="Share" active={isScreenSharing} onClick={onToggleScreenShare} activeColor="text-[#23d959]" hoverBg="hover:bg-[#23d959]/10">
-            <ShareIcon />
-          </ToolbarBtn>
-
-          {/* Recording */}
-          <ToolbarBtn
-            label={isRecording ? "Stop Rec" : "Record"}
-            active={isRecording}
-            onClick={onToggleRecording}
-            activeColor="text-red-400"
-            disabled={recordingPending}
-          >
-            <RecordIcon />
-            {isRecording && <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
-          </ToolbarBtn>
-
-          {/* Whiteboard */}
-          <ToolbarBtn label="Board" active={whiteboardOpen} onClick={onToggleWhiteboard} activeColor="text-orange-400">
-            <BoardIcon />
-          </ToolbarBtn>
-
-          {/* Captions */}
-          <ToolbarBtn label="Captions" active={captionsOn} onClick={() => setCaptionsOn(p => !p)} activeColor="text-orbit-green">
-            <CcIcon />
-          </ToolbarBtn>
-
-          {/* Share Link */}
-          <ToolbarBtn
-            label={copiedLink ? "Copied!" : "Share"}
-            active={!!copiedLink}
-            onClick={onShareLink}
-            activeColor="text-orbit-blue"
-          >
-            <LinkIcon />
-          </ToolbarBtn>
-
-          {/* Settings */}
-          <Link href="/settings" className="flex flex-col items-center justify-center w-[44px] sm:w-[50px] h-[48px] sm:h-[54px] rounded-xl native-btn-soft hover:bg-white/[0.06] transition-all duration-150 text-orbit-text-muted shrink-0">
-            <svg className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth={1.5} />
-            </svg>
-            <span className="text-[8px] sm:text-[9px] font-medium leading-tight mt-0.5">Settings</span>
-          </Link>
-
-          {/* Reactions */}
-          <Reactions isOpen={reactionsOpen} onToggle={onToggleReactions} onReaction={onReaction} />
-
-          {/* Host Controls (only visible to host) */}
-          {isHost && (
-            <div className="relative">
-              <ToolbarBtn label="Host" active={hostMenuOpen} onClick={() => setHostMenuOpen(p => !p)} activeColor="text-amber-400">
-                <CrownIcon />
-              </ToolbarBtn>
-              {hostMenuOpen && (
-                <div className="absolute bottom-full right-0 mb-2 w-48 bg-orbit-panel border border-zinc-700 rounded-xl shadow-2xl py-1 z-40 animate-fade-in overflow-hidden">
-                  <div className="px-4 py-2 text-[10px] text-zinc-400 font-semibold border-b border-zinc-700">Host Controls</div>
-                  <button onClick={() => { setHostMenuOpen(false); onToggleWhiteboard(); }} className="w-full text-left px-4 py-2.5 text-xs text-zinc-300 hover:bg-white/5 transition flex items-center gap-2">
-                    <BoardIcon /> Whiteboard
-                  </button>
-                  <button onClick={() => { setHostMenuOpen(false); onToggleRecording(); }} className="w-full text-left px-4 py-2.5 text-xs text-zinc-300 hover:bg-white/5 transition flex items-center gap-2">
-                    <RecordIcon /> {isRecording ? "Stop Recording" : "Record Meeting"}
-                  </button>
-                  <div className="border-t border-zinc-700 my-1" />
-                  <div className="px-4 py-2 text-[10px] text-zinc-500">Lock meeting, mute all — coming soon</div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Right — Leave */}
+    <div className="orbit-toolbar w-full shrink-0 sticky bottom-0 z-30 border-t border-black/50 safe-bottom">
+      {/* DESKTOP LAYOUT */}
+      <div className="hidden sm:flex items-center justify-between px-3 h-[64px] gap-1">
         <div className="flex items-center h-full gap-1 shrink-0">
-          <Link href="/" className="bg-orbit-red hover:bg-red-700 active:bg-red-800 active:scale-95 text-white font-semibold text-xs sm:text-sm px-3 sm:px-4 py-1.5 rounded-lg transition-all duration-150 shadow-lg shadow-red-500/20">
+          {btnMic} {btnCam}
+        </div>
+        <div className="flex items-center h-full gap-1 text-orbit-text-muted justify-center flex-1">
+          {btnSecurity} {btnParticipants} {btnChat} {btnShare} {btnRecord} {btnBoard} {btnCaptions} {btnLink} {btnSettings} {btnReactions} {btnHost}
+        </div>
+        <div className="flex items-center h-full gap-1 shrink-0">
+          <Link href="/" className="bg-orbit-red hover:bg-red-700 active:bg-red-800 active:scale-95 text-white font-semibold text-sm px-4 py-1.5 rounded-lg transition-all duration-150 shadow-lg shadow-red-500/20">
             Leave
           </Link>
+        </div>
+      </div>
+
+      {/* MOBILE LAYOUT */}
+      <div className="flex sm:hidden flex-col w-full">
+        <div className="flex items-center justify-between px-1.5 py-1.5 w-full">
+          <div className="flex items-center gap-0.5">
+            {btnMic} {btnCam} {btnChat} {btnParticipants}
+          </div>
+          <Link href="/" className="bg-orbit-red active:bg-red-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow-lg shadow-red-500/20 ml-2">
+            Leave
+          </Link>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-0.5 px-1.5 pb-2 text-orbit-text-muted">
+          {btnShare} {btnRecord} {btnBoard} {btnReactions} {btnSecurity} {btnCaptions} {btnLink} {btnSettings} {btnHost}
         </div>
       </div>
     </div>
