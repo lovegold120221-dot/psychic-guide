@@ -30,7 +30,7 @@ export async function POST(request: Request) {
             translationConfig: {
               targetLanguageCode: targetLanguage,
             },
-          },
+          } as any,
         });
         console.log("Gemini translation test response:", test.text);
       } catch (err: any) {
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
           translationConfig: {
             targetLanguageCode: targetLanguage,
           },
-        },
+        } as any,
       });
 
       return NextResponse.json({
