@@ -42,6 +42,12 @@ export function useTranslation() {
     return langs[code] || code;
   }, []);
 
+  const addEntry = useCallback((original: string, translated: string) => {
+    const id = `t-${++idRef.current}`;
+    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setEntries((prev) => [...prev.slice(-50), { id, original, translated, timestamp }]);
+  }, []);
+
   const startTranslation = useCallback(async (lang: string) => {
     setTargetLanguage(lang);
     try {
@@ -50,18 +56,22 @@ export function useTranslation() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "start", targetLanguage: lang }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Translation API not available");
+        if (data.error?.includes("quota") || data.error?.includes("RESOURCE_EXHAUSTED")) {
+          addEntry("⚠️ Gemini API quota exceeded. Free tier limit reached. Please wait or upgrade.", "");
+        } else {
+          addEntry("", `⚠️ ${data.error || "Translation unavailable"}`);
+        }
+        throw new Error(data.error || "Translation API not available");
       }
       setIsTranslating(true);
       setApiReady(true);
     } catch (err: any) {
-      console.error("Translation start error:", err.message);
       setApiReady(false);
       setIsTranslating(false);
     }
-  }, []);
+  }, [addEntry]);
 
   const stopTranslation = useCallback(async () => {
     setIsTranslating(false);
