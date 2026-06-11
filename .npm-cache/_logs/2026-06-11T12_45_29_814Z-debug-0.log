@@ -1,0 +1,19 @@
+0 verbose cli /opt/homebrew/Cellar/node/26.0.0/bin/node /opt/homebrew/bin/npm
+1 info using npm@11.12.1
+2 info using node@v26.0.0
+3 silly config load:file:/opt/homebrew/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/eburon/Downloads/Orbit Meeting/.npmrc
+5 silly config load:file:/opt/homebrew/etc/npmrc
+6 verbose title npm install buffer process
+7 verbose argv "install" "buffer" "process" "--cache" "./.npm-cache" "--no-audit" "--no-fund"
+8 verbose logfile logs-max:10 dir:/Users/eburon/Downloads/Orbit Meeting/.npm-cache/_logs/2026-06-11T12_45_29_814Z-
+9 verbose logfile /Users/eburon/Downloads/Orbit Meeting/.npm-cache/_logs/2026-06-11T12_45_29_814Z-debug-0.log
+10 silly logfile done cleaning log files
+11 silly packumentCache heap:4395630592 maxSize:1098907648 maxEntrySize:549453824
+12 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with ENOTFOUND
+13 silly idealTree buildDeps
+14 silly fetch manifest buffer@*
+15 silly packumentCache full:https://registry.npmjs.org/buffer cache-miss
+16 http fetch GET https://registry.npmjs.org/buffer attempt 1 failed with ENOTFOUND
+17 http fetch GET https://registry.npmjs.org/npm attempt 2 failed with ENOTFOUND
+18 http fetch GET https://registry.npmjs.org/buffer attempt 2 failed with ENOTFOUND

@@ -1,3 +1,5 @@
+const path = require("path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -6,6 +8,29 @@ const nextConfig = {
       { protocol: "https", hostname: "eburon.ai" },
     ],
   },
+  webpack: (config, { isServer }) => {
+    // Restrict Webpack to resolve modules only inside this project
+    config.resolve.modules = [
+      path.resolve(__dirname, "node_modules"),
+      "node_modules"
+    ];
+
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        buffer: false,
+        process: false,
+      };
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        buffer: false,
+        process: false,
+      };
+    }
+    return config;
+  }
 };
 
 module.exports = nextConfig;
+
+
