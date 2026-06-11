@@ -174,6 +174,18 @@ function MeetingRoomUI() {
           onMuteParticipant={muteParticipant}
           onRemoveParticipant={removeParticipant}
         />
+
+        {/* Translation Sidebar (right panel) */}
+        <TranslationSidebar
+          isOpen={translateOpen}
+          onClose={() => setTranslateOpen(false)}
+          isTranslating={isTranslating}
+          onToggleTranslate={toggleTranslation}
+          targetLanguage={targetLanguage}
+          onLanguageChange={changeLanguage}
+          entries={translationEntries}
+          targetLangName={targetLangName}
+        />
       </div>
 
       <BottomToolbar
@@ -204,18 +216,6 @@ function MeetingRoomUI() {
         onSwitchLayout={(mode: string) => switchLayout(mode as any)}
         translateOpen={translateOpen}
         onToggleTranslate={() => setTranslateOpen(!translateOpen)}
-      />
-
-      {/* Translation Sidebar */}
-      <TranslationSidebar
-        isOpen={translateOpen}
-        onClose={() => setTranslateOpen(false)}
-        isTranslating={isTranslating}
-        onToggleTranslate={toggleTranslation}
-        targetLanguage={targetLanguage}
-        onLanguageChange={changeLanguage}
-        entries={translationEntries}
-        targetLangName={targetLangName}
       />
 
       {/* Security Panel */}
