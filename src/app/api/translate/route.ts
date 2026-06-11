@@ -49,6 +49,7 @@ export async function POST(request: Request) {
     }
 
     if (action === "translate" && text) {
+      // Transcribe and translate all incoming speaker audio
       const result = await ai.models.generateContent({
         model: "gemini-3.5-live-translate-preview",
         contents: [{ role: "user", parts: [{ text }] }],
@@ -62,6 +63,25 @@ export async function POST(request: Request) {
       return NextResponse.json({
         original: text,
         translated: result.text,
+      });
+    }
+
+    if (action === "transcribe") {
+      // Transcribe audio and return both original text and translation
+      // This handles all incoming audio from any speaker
+      const result = await ai.models.generateContent({
+        model: "gemini-3.5-live-translate-preview",
+        contents: [{ role: "user", parts: [{ text: body.audio || "Transcribe and translate this audio" }] }],
+        config: {
+          translationConfig: {
+            targetLanguageCode: targetLanguage,
+          },
+        } as any,
+      });
+
+      return NextResponse.json({
+        transcription: result.text,
+        translation: result.text,
       });
     }
 
