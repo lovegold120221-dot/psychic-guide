@@ -20,8 +20,6 @@ const LANG_NAMES: Record<string, string> = {
   "yi":"Yiddish","yo":"Yoruba","zu":"Zulu",
 };
 
-const MODEL = "gemini-2.0-flash";
-
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -29,58 +27,31 @@ export async function POST(request: Request) {
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "Add GEMINI_API_KEY to .env.local" },
-        { status: 501 }
-      );
+      return NextResponse.json({ error: "Add GEMINI_API_KEY to .env.local" }, { status: 501 });
     }
 
-    // Detect Vertex AI key (AQ prefix) vs Google AI Studio key (AIza prefix)
-    const isVertexAI = apiKey.startsWith("AQ.");
-    const aiOpts: Record<string, any> = { apiKey };
-    if (isVertexAI) {
-      // Vertex AI: use v1beta endpoint with project location
-      Object.assign(aiOpts, {
-        httpOptions: { apiVersion: "v1beta", baseUrl: "https://us-central1-aiplatform.googleapis.com/v1" },
-      });
-    } else {
-      // Google AI Studio: standard endpoint
-      aiOpts.httpOptions = { apiVersion: "v1beta" };
-    }
-
-    const ai = new GoogleGenAI(aiOpts as any);
+    const ai = new GoogleGenAI({ apiKey });
     const langName = LANG_NAMES[targetLanguage || "en"] || targetLanguage || "English";
 
-    if (action === "start") {
-      try {
-        const test = await ai.models.generateContent({
-          model: MODEL,
-          contents: [{ role: "user", parts: [{ text: `Translate to ${langName}: Hi` }] }],
-        });
-        return NextResponse.json({
-          status: "connected",
-          targetLanguage: targetLanguage || "en",
-          provider: isVertexAI ? "vertexai" : "gemini",
-        });
-      } catch (err: any) {
-        return NextResponse.json({ error: err.message }, { status: 500 });
-      }
-    }
-
     if (action === "translate" && text) {
+      // Use gemini-2.0-flash for translation — the Live Translation model
+      // requires WebSocket audio streaming and isn't suitable for REST API.
       const result = await ai.models.generateContent({
-        model: MODEL,
+        model: "gemini-2.0-flash",
         contents: [{
           role: "user",
-          parts: [{
-            text: `Translate precisely to ${langName}. Return translation only, no notes:\n\n${text}`
-          }]
+          parts: [{ text: `Translate this precisely to ${langName}. Return ONLY the translation, nothing else:\n\n${text}` }]
         }],
       });
+
       return NextResponse.json({
         original: text,
         translated: result.text?.trim() || "",
       });
+    }
+
+    if (action === "start") {
+      return NextResponse.json({ status: "ok" });
     }
 
     if (action === "stop") {

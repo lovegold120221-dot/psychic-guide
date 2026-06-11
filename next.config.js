@@ -9,11 +9,6 @@ const nextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // Restrict Webpack to resolve modules only inside this project
-    config.resolve.modules = [
-      path.resolve(__dirname, "node_modules"),
-      "node_modules"
-    ];
 
     if (!isServer) {
       config.resolve.alias = {

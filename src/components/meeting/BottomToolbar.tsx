@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Reactions from "./Reactions";
+import { useCallStateHooks } from "@stream-io/video-react-sdk";
 
 interface BottomToolbarProps {
   localMicMuted: boolean;
@@ -34,6 +35,97 @@ interface BottomToolbarProps {
   onToggleTranslate?: () => void;
 }
 
+function MicVisualizer({ stream }: { stream: MediaStream | undefined }) {
+  const bar1Ref = useRef<HTMLDivElement>(null);
+  const bar2Ref = useRef<HTMLDivElement>(null);
+  const bar3Ref = useRef<HTMLDivElement>(null);
+  
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!stream || stream.getAudioTracks().length === 0) {
+      if (bar1Ref.current) bar1Ref.current.style.height = "4px";
+      if (bar2Ref.current) bar2Ref.current.style.height = "4px";
+      if (bar3Ref.current) bar3Ref.current.style.height = "4px";
+      return;
+    }
+
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      const ctx = new AudioCtx();
+      audioContextRef.current = ctx;
+
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 32;
+      analyserRef.current = analyser;
+
+      const source = ctx.createMediaStreamSource(stream);
+      source.connect(analyser);
+      sourceRef.current = source;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const update = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+        const level = average / 255;
+        
+        const h1 = Math.max(4, Math.min(16, 4 + level * 20));
+        const h2 = Math.max(4, Math.min(22, 4 + level * 30));
+        const h3 = Math.max(4, Math.min(16, 4 + level * 22));
+        
+        if (bar1Ref.current) bar1Ref.current.style.height = `${h1}px`;
+        if (bar2Ref.current) bar2Ref.current.style.height = `${h2}px`;
+        if (bar3Ref.current) bar3Ref.current.style.height = `${h3}px`;
+        
+        animationFrameRef.current = requestAnimationFrame(update);
+      };
+      
+      update();
+    } catch (e) {
+      console.error("Visualizer initialization failed:", e);
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (sourceRef.current) {
+        try { sourceRef.current.disconnect(); } catch (e) {}
+      }
+      if (audioContextRef.current) {
+        try { audioContextRef.current.close(); } catch (e) {}
+      }
+    };
+  }, [stream]);
+
+  return (
+    <div className="absolute -right-2 bottom-1.5 flex items-end gap-[1.5px] h-[22px] w-[10px] pointer-events-none">
+      <div 
+        ref={bar1Ref}
+        className="w-[2px] h-[4px] rounded-full bg-orbit-green transition-all duration-75"
+      />
+      <div 
+        ref={bar2Ref}
+        className="w-[2px] h-[4px] rounded-full bg-orbit-green transition-all duration-75"
+      />
+      <div 
+        ref={bar3Ref}
+        className="w-[2px] h-[4px] rounded-full bg-orbit-green transition-all duration-75"
+      />
+    </div>
+  );
+}
+
 export default function BottomToolbar({
   localMicMuted, localCamOn, chatOpen, reactionsOpen, unreadChats, participantCount,
   onToggleMic, onToggleCam, onToggleChat, onToggleReactions, onReaction,
@@ -44,6 +136,9 @@ export default function BottomToolbar({
   layoutMode, onSwitchLayout,
   translateOpen, onToggleTranslate,
 }: BottomToolbarProps) {
+  const { useMicrophoneState } = useCallStateHooks();
+  const { mediaStream } = useMicrophoneState();
+
   const [captionsOn, setCaptionsOn] = useState(false);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
@@ -56,8 +151,11 @@ export default function BottomToolbar({
 
   const btnMic = (
     <ToolbarBtn active={!localMicMuted} label={localMicMuted ? "Unmute" : "Mute"} onClick={onToggleMic} activeColor="text-white">
-      <MicIcon />
-      {localMicMuted && <Slash />}
+      <div className="relative">
+        <MicIcon />
+        {!localMicMuted && <MicVisualizer stream={mediaStream} />}
+        {localMicMuted && <Slash />}
+      </div>
     </ToolbarBtn>
   );
 
