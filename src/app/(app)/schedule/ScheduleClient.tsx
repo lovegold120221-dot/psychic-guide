@@ -4,11 +4,11 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import TitleBar from "@/components/ui/TitleBar";
-import Sidebar from "@/components/ui/Sidebar";
 import GlassCard from "@/components/shared/GlassCard";
 import FormField from "@/components/shared/FormField";
 import DateTimePicker from "@/components/shared/DateTimePicker";
 import VideoPreview from "@/components/shared/VideoPreview";
+import InitialAvatar from "@/components/shared/InitialAvatar";
 import { useFormState, useMeetingId, useCopyToClipboard } from "@/lib/hooks";
 import { DURATION_PRESETS } from "@/lib/constants";
 
@@ -24,6 +24,7 @@ export default function ScheduleClient() {
   });
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "You";
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User";
 
   const [cameraOn, setCameraOn] = useState(false);
   const [micOn, setMicOn] = useState(true);
@@ -104,9 +105,31 @@ export default function ScheduleClient() {
 
   return (
     <>
-      <TitleBar title="Schedule Meeting" />
+      <TitleBar
+        title="Schedule Meeting"
+        logo
+        rightContent={
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="text-xs text-zinc-400 font-medium">{displayName}</span>
+              <span className="text-[10px] text-zinc-600">{user?.email}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <InitialAvatar name={displayName} size={28} />
+              <button
+                onClick={signOut}
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition active:scale-90"
+                title="Sign out"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
+      />
       <div className="flex-1 w-full h-full flex overflow-hidden">
-        <Sidebar user={user} onSignOut={signOut} />
         <main className="flex-1 p-4 sm:p-8 overflow-y-auto pb-20 md:pb-8">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
