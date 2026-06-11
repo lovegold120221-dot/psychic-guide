@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const MODEL = "gemini-2.0-flash";
-
-// Language name lookup
 const LANG_NAMES: Record<string, string> = {
   "af":"Afrikaans","sq":"Albanian","am":"Amharic","ar":"Arabic","hy":"Armenian",
   "az":"Azerbaijani","eu":"Basque","be":"Belarusian","bn":"Bengali","bs":"Bosnian",
@@ -23,6 +20,8 @@ const LANG_NAMES: Record<string, string> = {
   "yi":"Yiddish","yo":"Yoruba","zu":"Zulu",
 };
 
+const MODEL = "gemini-2.0-flash";
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -36,7 +35,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    // Detect Vertex AI key (AQ prefix) vs Google AI Studio key (AIza prefix)
+    const isVertexAI = apiKey.startsWith("AQ.");
+    const aiOpts: Record<string, any> = { apiKey };
+    if (isVertexAI) {
+      // Vertex AI: use v1beta endpoint with project location
+      Object.assign(aiOpts, {
+        httpOptions: { apiVersion: "v1beta", baseUrl: "https://us-central1-aiplatform.googleapis.com/v1" },
+      });
+    } else {
+      // Google AI Studio: standard endpoint
+      aiOpts.httpOptions = { apiVersion: "v1beta" };
+    }
+
+    const ai = new GoogleGenAI(aiOpts as any);
     const langName = LANG_NAMES[targetLanguage || "en"] || targetLanguage || "English";
 
     if (action === "start") {
@@ -48,7 +60,7 @@ export async function POST(request: Request) {
         return NextResponse.json({
           status: "connected",
           targetLanguage: targetLanguage || "en",
-          test: test.text,
+          provider: isVertexAI ? "vertexai" : "gemini",
         });
       } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 });
