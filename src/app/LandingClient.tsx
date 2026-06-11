@@ -23,19 +23,15 @@ export default function LandingClient() {
   return (
     <div className="h-full w-full overflow-y-auto overscroll-contain bg-[#f5f5f7] dark:bg-black text-black dark:text-white">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-black/80 border-b border-black/[0.04]">
-        <div className="max-w-7xl mx-auto px-6 h-12 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 bg-[#0a0a0a] border-b border-white/[0.04]">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <svg viewBox="0 0 32 32" width="20" height="20" fill="none" className="text-blue-600">
-              <ellipse cx="16" cy="16" rx="13" ry="6" stroke="currentColor" strokeWidth="2.4" transform="rotate(-28 16 16)"/>
-              <circle cx="16" cy="16" r="3.4" fill="currentColor"/>
-              <circle cx="26.2" cy="10.5" r="1.7" fill="currentColor"/>
-            </svg>
-            <span className="font-semibold text-sm tracking-tight">Orbit</span>
+            <img src="https://eburon.ai/icon-eburon.svg" alt="Orbit Logo" className="w-5 h-5 object-contain" />
+            <span className="font-semibold text-sm tracking-tight text-white">Orbit</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/auth/login" className="text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white transition">Sign In</Link>
-            <Link href="/auth/signup" className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-full transition active:scale-95">Sign Up</Link>
+          <div className="flex items-center gap-6">
+            <Link href="/auth/login" className="text-xs font-medium text-zinc-300 hover:text-white transition">Sign In</Link>
+            <Link href="/auth/signup" className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-full transition active:scale-95 shadow-lg shadow-blue-500/20">Sign Up</Link>
           </div>
         </div>
       </nav>
@@ -48,10 +44,11 @@ export default function LandingClient() {
         </div>
         <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.05]">
-            Video meetings.<br/><span className="text-blue-400">Reimagined.</span>
+            Video meetings.<br/><span className="text-blue-500">Reimagined.</span>
           </h1>
-          <p className="mt-6 text-lg sm:text-xl text-zinc-300 max-w-xl mx-auto leading-relaxed font-light">
-            Crystal-clear video, real-time chat, and enterprise-grade security — all in a beautifully simple interface.
+          <p className="mt-6 text-lg sm:text-xl text-zinc-300 max-w-2xl mx-auto leading-relaxed font-light">
+            Crystal-clear video, real-time chat, and enterprise-grade security<br className="hidden sm:block" />
+            — all in a beautifully simple interface.
           </p>
           <div className="mt-10 flex items-center justify-center gap-4">
             <Link

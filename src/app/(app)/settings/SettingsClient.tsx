@@ -335,9 +335,8 @@ function LivePreview({ settings, selectedCam, compact = false }: { settings: Vid
       cleanupRef.current = result.cleanup;
       if (videoRef.current) { videoRef.current.srcObject = result.outputStream; setStreaming(true); }
     } catch (err: any) {
-      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
-        setPermissionDenied(true);
-      }
+      console.error("Camera error:", err);
+      setPermissionDenied(true);
       setStreaming(false);
     }
   }, [settings, selectedCam]);

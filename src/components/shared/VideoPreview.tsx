@@ -37,9 +37,8 @@ export default function VideoPreview({
           }
         })
         .catch((err) => {
-          if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
-            setPermissionDenied(true);
-          }
+          console.error("Camera error:", err);
+          setPermissionDenied(true);
           onToggleCamera();
         });
     } else {
