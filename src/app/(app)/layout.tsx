@@ -10,11 +10,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  const isMeeting = pathname?.startsWith("/meeting");
+
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isMeeting) {
       router.push("/auth/login");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isMeeting]);
 
   if (loading) {
     return (
@@ -30,9 +32,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return null;
-
-  const isMeeting = pathname?.startsWith("/meeting");
+  // Allow anonymous users to access the meeting page
+  if (!user && !isMeeting) return null;
 
   return (
     <div className="h-full w-full flex flex-col overflow-hidden">

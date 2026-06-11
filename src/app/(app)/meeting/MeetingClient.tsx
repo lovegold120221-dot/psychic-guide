@@ -273,8 +273,9 @@ export default function MeetingClient() {
     fetchHost();
   }, [callId]);
 
+  const urlName = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("name") : null;
   const userId = user?.id || anonId;
-  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
+  const userName = urlName || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
 
   const { client, connectionState } = useStreamVideo({ userId, userName });
 
