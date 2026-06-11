@@ -95,6 +95,7 @@ export function useStreamChat(userId: string, userName: string) {
       // ─── Message receive handler with private message support ──
       meetingChannel.on("message.new", (event: any) => {
         const msg = event.message;
+        const msgId = msg.id;
         const msgUserId = msg.user?.id || "unknown";
         const msgUserName = msg.user?.name || msg.user?.id || "Unknown";
         const isPrivate = msg.is_private === true;
@@ -103,21 +104,25 @@ export function useStreamChat(userId: string, userName: string) {
         // Skip private messages not intended for us
         if (isPrivate && targetUserId && targetUserId !== userId) return;
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: msg.id,
-            userId: msgUserId,
-            userName: msgUserName,
-            text: msg.text || "",
-            time: new Date(msg.created_at).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-            isPrivate,
-            targetUserId,
-          },
-        ]);
+        // Avoid duplicates (from optimistic add)
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === msgId)) return prev;
+          return [
+            ...prev,
+            {
+              id: msgId,
+              userId: msgUserId,
+              userName: msgUserName,
+              text: msg.text || "",
+              time: new Date(msg.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+              isPrivate,
+              targetUserId,
+            },
+          ];
+        });
       });
 
       // Reaction events
@@ -159,6 +164,8 @@ export function useStreamChat(userId: string, userName: string) {
       setConnectionState("error");
       clientRef.current?.disconnectUser();
       clientRef.current = null;
+    } finally {
+      connectingRef.current = false;
     }
   }, [userId, userName]);
 
@@ -166,21 +173,39 @@ export function useStreamChat(userId: string, userName: string) {
   const sendMessage = useCallback(
     async (text: string, targetUserId?: string) => {
       const ch = channelRef.current;
-      if (!ch || !text.trim()) return false;
+      if (!ch) {
+        console.warn("Channel not ready yet");
+        return false;
+      }
+      const cleanText = text.trim();
+      if (!cleanText) return false;
       try {
-        const msgData: any = { text: text.trim() };
+        const msgData: any = { text: cleanText };
         if (targetUserId) {
           msgData.is_private = true;
           msgData.target_user_id = targetUserId;
         }
         await ch.sendMessage(msgData);
+        // Optimistically add to local state
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `optimistic-${Date.now()}`,
+            userId: userId,
+            userName: userName,
+            text: cleanText,
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            isPrivate: !!targetUserId,
+            targetUserId,
+          },
+        ]);
         return true;
       } catch (err) {
         console.error("Stream send error:", err);
         return false;
       }
     },
-    []
+    [userId, userName]
   );
 
   const sendReaction = useCallback(
