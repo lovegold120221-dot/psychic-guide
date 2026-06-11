@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+/* ---- Base ---- */
+html,
+body {
+  @apply bg-orbit-darker text-white font-sans m-0 p-0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ---- iOS safe area support ---- */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ---- Focus ring ---- */
+*:focus-visible {
+  outline: 2px solid #0e72ed;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---- Orbit utility classes ---- */
+@layer components {
+  .orbit-title-bar {
+    @apply bg-orbit-panel;
+  }
+  .orbit-toolbar {
+    @apply bg-orbit-dark;
+  }
+  .orbit-panel-bg {
+    background-color: rgba(26, 26, 26, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .orbit-btn-hover {
+    @apply transition-colors duration-150;
+  }
+  .orbit-btn-hover:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  .orbit-card {
+    @apply bg-orbit-card;
+  }
+  .orbit-card-hover {
+    @apply transition-colors duration-200;
+  }
+  .orbit-card-hover:hover {
+    @apply bg-orbit-card-hover;
+  }
+
+  .nameplate {
+    background-color: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    @apply px-2 py-0.5 text-xs flex items-center gap-1.5 rounded-tr;
+  }
+
+  .active-speaker {
+    outline: 4px solid #c1c35e;
+    outline-offset: -4px;
+    z-index: 10;
+  }
+
+  .reaction-bubble {
+    @apply absolute text-3xl pointer-events-none z-50;
+    animation: floatUp 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    bottom: 80px;
+  }
+
+  .action-btn {
+    @apply transition-all duration-200 ease-out;
+  }
+  .action-btn:hover {
+    transform: translateY(-4px);
+  }
+  .action-btn:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  /* Glassmorphism card */
+  .glass-card {
+    background: rgba(36, 36, 36, 0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 25px 60px -20px rgba(0, 0, 0, 0.5);
+  }
+
+  .glass-card-elevated {
+    background: rgba(36, 36, 36, 0.8);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Clock gradient */
+  .clock-gradient {
+    background: linear-gradient(135deg, #1c1c1c 0%, #2b2b2b 100%);
+  }
+
+  /* Shimmer loading */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Tap highlight removal for mobile */
+  .tap-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Native-like scroll snap */
+  .snap-y-mandatory {
+    scroll-snap-type: y mandatory;
+  }
+  .snap-start {
+    scroll-snap-align: start;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ---- Layout helpers ---- */
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+.w-screen-safe {
+  width: 100vw;
+  width: 100dvw;
+}
+
+/* ---- Input date/time styling ---- */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.8;
+}
+
+/* ---- Select styling ---- */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25rem;
+  padding-right: 2.5rem;
+}
