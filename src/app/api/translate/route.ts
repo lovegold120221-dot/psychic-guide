@@ -1,87 +1,61 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI, Modality, MediaResolution, type LiveServerMessage } from "@google/genai";
-
-const MODEL = "models/gemini-3.5-live-translate-preview";
+import { GoogleGenAI } from "@google/genai";
 
 export async function POST(request: Request) {
+  const body = await request.json();
+  const { action, targetLanguage, text } = body;
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return NextResponse.json({ error: "Add GEMINI_API_KEY" }, { status: 501 });
+  }
+
+  if (action === "start") {
+    return NextResponse.json({ status: "ok" });
+  }
+
+  if (action === "stop") {
+    return NextResponse.json({ status: "disconnected" });
+  }
+
+  if (action !== "translate" || !text) {
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  }
+
   try {
-    const body = await request.json();
-    const { action, targetLanguage, text } = body;
-    const apiKey = process.env.GEMINI_API_KEY;
+    const ai = new GoogleGenAI({ apiKey });
+    const lang = getLangName(targetLanguage || "en");
 
-    if (!apiKey) {
-      return NextResponse.json({ error: "Add GEMINI_API_KEY" }, { status: 501 });
-    }
+    const result = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: [{
+        role: "user",
+        parts: [{ text: `Translate precisely to ${lang}. Return ONLY the translation, nothing else:\n\n${text}` }],
+      }],
+    });
 
-    if (action === "start") {
-      return NextResponse.json({ status: "ok", model: MODEL });
-    }
-
-    if (action === "translate" && text) {
-      const ai = new GoogleGenAI({ apiKey });
-      const responseQueue: LiveServerMessage[] = [];
-      let session: any;
-
-      session = await ai.live.connect({
-        model: MODEL,
-        callbacks: {
-          onopen() {},
-          onmessage(message: LiveServerMessage) {
-            responseQueue.push(message);
-          },
-          onerror(e: ErrorEvent) {
-            console.error("Live err:", e.message);
-          },
-          onclose() {},
-        },
-        config: {
-          responseModalities: [Modality.AUDIO, Modality.TEXT],
-          mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
-          translationConfig: {
-            targetLanguageCode: targetLanguage || "en",
-            echoTargetLanguage: true,
-          },
-        } as any,
-      }) as any;
-
-      await session.sendClientContent({
-        turns: [{ role: "user", parts: [{ text }] }],
-        turnComplete: true,
-      });
-
-      let translated = "";
-      let debug = "";
-      const deadline = Date.now() + 20000;
-
-      while (!translated && Date.now() < deadline) {
-        const msg = responseQueue.shift();
-        if (msg) {
-          // Log all parts for debugging
-          const parts = msg.serverContent?.modelTurn?.parts;
-          const hasText = parts?.some((p: any) => p.text);
-          const hasData = parts?.some((p: any) => p.inlineData || p.fileData);
-          debug += `msg(turnComplete=${!!msg.serverContent?.turnComplete},text=${!!hasText},data=${!!hasData}) `;
-          
-          if (parts) {
-            for (const part of parts) {
-              if (part.text) translated += part.text;
-            }
-          }
-          if (msg.serverContent?.turnComplete) break;
-        } else {
-          await new Promise((r) => setTimeout(r, 200));
-        }
-      }
-
-      if (!translated) translated = `(no text - debug: ${debug})`;
-    }
-
-    if (action === "stop") {
-      return NextResponse.json({ status: "disconnected" });
-    }
-
-    return NextResponse.json({ error: "Invalid" }, { status: 400 });
+    return NextResponse.json({
+      original: text,
+      translated: result.text?.trim() || "",
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+function getLangName(code: string): string {
+  const m: Record<string, string> = {
+    "af":"Afrikaans","sq":"Albanian","ar":"Arabic","hy":"Armenian","az":"Azerbaijani",
+    "eu":"Basque","be":"Belarusian","bn":"Bengali","bg":"Bulgarian","ca":"Catalan",
+    "zh-CN":"Chinese (Simplified)","zh-TW":"Chinese (Traditional)","hr":"Croatian",
+    "cs":"Czech","da":"Danish","nl":"Dutch","nl-BE":"Dutch (Belgium)","en":"English",
+    "et":"Estonian","fi":"Finnish","fr":"French","de":"German","el":"Greek",
+    "hi":"Hindi","hu":"Hungarian","is":"Icelandic","id":"Indonesian","ga":"Irish",
+    "it":"Italian","ja":"Japanese","ko":"Korean","lv":"Latvian","lt":"Lithuanian",
+    "ms":"Malay","no":"Norwegian","fa":"Persian","pl":"Polish","pt":"Portuguese",
+    "ro":"Romanian","ru":"Russian","sr":"Serbian","sk":"Slovak","sl":"Slovenian",
+    "es":"Spanish","sw":"Swahili","sv":"Swedish","tl":"Tagalog","ta":"Tamil",
+    "th":"Thai","tr":"Turkish","uk":"Ukrainian","ur":"Urdu","vi":"Vietnamese",
+  };
+  return m[code] || code;
 }
