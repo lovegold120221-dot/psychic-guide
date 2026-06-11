@@ -36,7 +36,7 @@ export interface CreateMeetingInput {
 export async function getMeetingsByHost(hostId: string): Promise<MeetingRecord[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
-    .from("meetings")
+    .from("orbit_meetings")
     .select("*")
     .eq("host_id", hostId)
     .order("created_at", { ascending: false });
@@ -48,7 +48,7 @@ export async function getMeetingsByHost(hostId: string): Promise<MeetingRecord[]
 export async function getMeetingByMeetingId(meetingId: string): Promise<MeetingRecord | null> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
-    .from("meetings")
+    .from("orbit_meetings")
     .select("*")
     .eq("meeting_id", meetingId)
     .single();
@@ -60,7 +60,7 @@ export async function getMeetingByMeetingId(meetingId: string): Promise<MeetingR
 export async function createMeeting(input: CreateMeetingInput): Promise<MeetingRecord> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
-    .from("meetings")
+    .from("orbit_meetings")
     .insert({
       meeting_id: input.meeting_id,
       title: input.title,
@@ -85,7 +85,7 @@ export async function updateMeeting(
 ): Promise<MeetingRecord> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
-    .from("meetings")
+    .from("orbit_meetings")
     .update(updates)
     .eq("meeting_id", meetingId)
     .select()
@@ -98,7 +98,7 @@ export async function updateMeeting(
 export async function deleteMeeting(meetingId: string, hostId: string): Promise<void> {
   const supabase = createAdminClient();
   const { error } = await supabase
-    .from("meetings")
+    .from("orbit_meetings")
     .delete()
     .eq("meeting_id", meetingId)
     .eq("host_id", hostId);
@@ -110,7 +110,7 @@ export async function getUpcomingMeetings(hostId: string): Promise<MeetingRecord
   const supabase = createAdminClient();
   const today = new Date().toISOString().split("T")[0];
   const { data, error } = await supabase
-    .from("meetings")
+    .from("orbit_meetings")
     .select("*")
     .eq("host_id", hostId)
     .gte("meeting_date", today)

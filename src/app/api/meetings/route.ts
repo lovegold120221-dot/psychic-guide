@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     }
 
     const { data, error } = await supabase
-      .from("meetings")
+      .from("orbit_meetings")
       .select("*")
       .eq("host_id", user.id)
       .order("created_at", { ascending: false });
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     }
 
     const { data, error } = await supabase
-      .from("meetings")
+      .from("orbit_meetings")
       .insert({
         meeting_id,
         title,
@@ -84,7 +84,7 @@ export async function PATCH(request: Request) {
     }
 
     const { data, error } = await supabase
-      .from("meetings")
+      .from("orbit_meetings")
       .update(updates)
       .eq("meeting_id", meeting_id)
       .eq("host_id", user.id)
@@ -117,7 +117,7 @@ export async function DELETE(request: Request) {
     }
 
     const { error } = await supabase
-      .from("meetings")
+      .from("orbit_meetings")
       .delete()
       .eq("meeting_id", meetingId)
       .eq("host_id", user.id);
