@@ -73,30 +73,24 @@ export default function TranslationSidebar({
         </div>
 
         {/* Radio: Enable Translation */}
-        <label className="flex items-center justify-between cursor-pointer group">
-          <div className="flex items-center gap-2">
-            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${
-              isTranslating ? "border-orbit-green" : "border-zinc-600"
-            }`}>
-              {isTranslating && <span className="w-2 h-2 rounded-full bg-orbit-green" />}
-            </span>
-            <span className="text-xs text-zinc-300 group-hover:text-white transition">Enable Translation</span>
-          </div>
-          <button onClick={onToggleTranslate} className="text-xs font-medium text-zinc-500 hover:text-white transition">Toggle</button>
-        </label>
+        <div onClick={onToggleTranslate} className="flex items-center gap-2 cursor-pointer group py-1">
+          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${
+            isTranslating ? "border-orbit-green" : "border-zinc-600"
+          }`}>
+            {isTranslating && <span className="w-2 h-2 rounded-full bg-orbit-green" />}
+          </span>
+          <span className="text-xs text-zinc-300 group-hover:text-white transition">Enable Translation</span>
+        </div>
 
         {/* Radio: Auto-play Audio */}
-        <label className="flex items-center justify-between cursor-pointer group">
-          <div className="flex items-center gap-2">
-            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${
-              autoPlayAudio ? "border-orbit-blue" : "border-zinc-600"
-            }`}>
-              {autoPlayAudio && <span className="w-2 h-2 rounded-full bg-orbit-blue" />}
-            </span>
-            <span className="text-xs text-zinc-300 group-hover:text-white transition">Auto-play translated audio</span>
-          </div>
-          <button onClick={() => setAutoPlayAudio(!autoPlayAudio)} className="text-xs font-medium text-zinc-500 hover:text-white transition">Toggle</button>
-        </label>
+        <div onClick={() => setAutoPlayAudio(!autoPlayAudio)} className="flex items-center gap-2 cursor-pointer group py-1">
+          <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition ${
+            autoPlayAudio ? "border-orbit-blue" : "border-zinc-600"
+          }`}>
+            {autoPlayAudio && <span className="w-2 h-2 rounded-full bg-orbit-blue" />}
+          </span>
+          <span className="text-xs text-zinc-300 group-hover:text-white transition">Auto-play translated audio</span>
+        </div>
 
         {/* Status */}
         <div className="flex items-center justify-between pt-1">
