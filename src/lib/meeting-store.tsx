@@ -226,8 +226,9 @@ function CallCreator({
       setError(err.message);
     });
     return () => {
-      joinedRef.current = false;
-      newCall.leave().catch(() => {});
+      // Don't reset joinedRef or leave the call on cleanup —
+      // Strict Mode double-mount would create duplicate participants.
+      // The call persists across mounts naturally.
     };
   }, [client, callId]);
 
