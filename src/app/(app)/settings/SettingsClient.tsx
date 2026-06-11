@@ -338,9 +338,9 @@ function LivePreview({ settings, selectedCam, compact = false }: { settings: Vid
   const startCamera = useCallback(async () => {
     setPermissionDenied(false);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: selectedCam ? { deviceId: { exact: selectedCam }, width: 640, height: 360 } : { width: 640, height: 360 },
-      });
+      const videoConstraints: any = { width: 640, height: 360 };
+      if (selectedCam) videoConstraints.deviceId = { exact: selectedCam };
+      const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
       streamRef.current = stream;
 
       if (!settings.mirror && settings.backgroundMode === "none" && settings.studioTouch === 0) {
@@ -358,8 +358,9 @@ function LivePreview({ settings, selectedCam, compact = false }: { settings: Vid
     }
   }, [settings, selectedCam]);
 
-  // Auto-start on mount if settings page opened
+  // Auto-start camera when selectedCam becomes available (devices enumerated)
   useEffect(() => {
+    if (!selectedCam) return;
     const timeout = setTimeout(() => startCamera(), 500);
     return () => {
       clearTimeout(timeout);
@@ -368,7 +369,7 @@ function LivePreview({ settings, selectedCam, compact = false }: { settings: Vid
       streamRef.current = null;
       if (videoRef.current) videoRef.current.srcObject = null;
     };
-  }, [startCamera]);
+  }, [startCamera, selectedCam]);
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-black border border-white/[0.06] aspect-video">
