@@ -18,8 +18,6 @@ html, body {
   -webkit-user-select: none;
   user-select: none;
   overflow: hidden;
-  /* iOS momentum scrolling where needed */
-  -webkit-overflow-scrolling: touch;
 }
 
 /* ---- Safe Areas (iOS notch + home indicator) ---- */

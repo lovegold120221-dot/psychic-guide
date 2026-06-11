@@ -9,8 +9,25 @@ interface WhiteboardProps {
 
 type Tool = "pen" | "eraser";
 
-const COLORS = ["#ffffff", "#ff3b30", "#ff9500", "#ffcc00", "#34c759", "#5ac8fa", "#007aff", "#5856d6", "#af52de", "#ff2d55"];
-const SIZES = [2, 4, 6, 10, 16];
+const COLORS = [
+  { value: "#ffffff", class: "bg-[#ffffff]" },
+  { value: "#ff3b30", class: "bg-[#ff3b30]" },
+  { value: "#ff9500", class: "bg-[#ff9500]" },
+  { value: "#ffcc00", class: "bg-[#ffcc00]" },
+  { value: "#34c759", class: "bg-[#34c759]" },
+  { value: "#5ac8fa", class: "bg-[#5ac8fa]" },
+  { value: "#007aff", class: "bg-[#007aff]" },
+  { value: "#5856d6", class: "bg-[#5856d6]" },
+  { value: "#af52de", class: "bg-[#af52de]" },
+  { value: "#ff2d55", class: "bg-[#ff2d55]" }
+];
+const SIZES = [
+  { value: 2, class: "w-[6px] h-[6px]" },
+  { value: 4, class: "w-[8px] h-[8px]" },
+  { value: 6, class: "w-[12px] h-[12px]" },
+  { value: 10, class: "w-[20px] h-[20px]" },
+  { value: 16, class: "w-[32px] h-[32px]" }
+];
 
 export default function Whiteboard({ isHost, onClose }: WhiteboardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,11 +126,10 @@ export default function Whiteboard({ isHost, onClose }: WhiteboardProps) {
         {/* Colors */}
         {COLORS.map((c) => (
           <button
-            key={c}
-            onClick={() => { setTool("pen"); setColor(c); }}
-            className={`w-5 h-5 rounded-full border-2 transition-all active:scale-90 ${color === c ? "border-white scale-110" : "border-transparent"}`}
-            style={{ backgroundColor: c }}
-            aria-label={c}
+            key={c.value}
+            onClick={() => { setTool("pen"); setColor(c.value); }}
+            className={`w-5 h-5 rounded-full border-2 transition-all active:scale-90 ${color === c.value ? "border-white scale-110" : "border-transparent"} ${c.class}`}
+            aria-label={c.value}
           />
         ))}
 
@@ -122,11 +138,10 @@ export default function Whiteboard({ isHost, onClose }: WhiteboardProps) {
         {/* Sizes */}
         {SIZES.map((s) => (
           <button
-            key={s}
-            onClick={() => setSize(s)}
-            className={`rounded-full bg-white transition-all active:scale-90 ${size === s ? "opacity-100 ring-2 ring-white ring-offset-1 ring-offset-orbit-panel" : "opacity-40 hover:opacity-70"}`}
-            style={{ width: Math.max(6, s * 2), height: Math.max(6, s * 2) }}
-            aria-label={`Size ${s}`}
+            key={s.value}
+            onClick={() => setSize(s.value)}
+            className={`rounded-full bg-white transition-all active:scale-90 ${size === s.value ? "opacity-100 ring-2 ring-white ring-offset-1 ring-offset-orbit-panel" : "opacity-40 hover:opacity-70"} ${s.class}`}
+            aria-label={`Size ${s.value}`}
           />
         ))}
 
