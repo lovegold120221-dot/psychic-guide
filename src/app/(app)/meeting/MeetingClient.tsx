@@ -150,6 +150,18 @@ function MeetingRoomUI() {
           currentUserId={user?.id}
           users={chatUsers}
         />
+
+        {/* Participants Sidebar (same right panel as Chat) */}
+        <ParticipantsSidebar
+          isOpen={participantsPanelOpen}
+          onClose={() => setParticipantsPanelOpen(false)}
+          participants={participants}
+          currentUserId={user?.id || ""}
+          isHost={isHost}
+          hostId={hostId}
+          onMuteParticipant={muteParticipant}
+          onRemoveParticipant={removeParticipant}
+        />
       </div>
 
       <BottomToolbar
@@ -188,17 +200,6 @@ function MeetingRoomUI() {
         />
       )}
 
-      {/* Participants Sidebar */}
-      <ParticipantsSidebar
-        isOpen={participantsPanelOpen}
-        onClose={() => setParticipantsPanelOpen(false)}
-        participants={participants}
-        currentUserId={user?.id || ""}
-        isHost={isHost}
-        hostId={hostId}
-        onMuteParticipant={muteParticipant}
-        onRemoveParticipant={removeParticipant}
-      />
     </>
   );
 }
