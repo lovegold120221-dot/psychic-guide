@@ -24,11 +24,12 @@ interface BottomToolbarProps {
   isHost: boolean;
   onToggleWhiteboard: () => void;
   whiteboardOpen: boolean;
-  // NEW
   onToggleSecurity?: () => void;
   onToggleParticipants?: () => void;
   onShareLink?: () => void;
   copiedLink?: boolean;
+  layoutMode?: string;
+  onSwitchLayout?: (mode: string) => void;
 }
 
 export default function BottomToolbar({
@@ -38,9 +39,16 @@ export default function BottomToolbar({
   isScreenSharing, onToggleScreenShare,
   isHost, onToggleWhiteboard, whiteboardOpen,
   onToggleSecurity, onToggleParticipants, onShareLink, copiedLink,
+  layoutMode, onSwitchLayout,
 }: BottomToolbarProps) {
   const [captionsOn, setCaptionsOn] = useState(false);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+
+  const VIEW_OPTIONS = [
+    { value: "2-speaker", label: "Speaker", icon: "▦" },
+    { value: "4-gallery", label: "Gallery", icon: "⊞" },
+  ];
   const [mobileExpanded, setMobileExpanded] = useState(false);
 
   const btnMic = (
@@ -120,6 +128,31 @@ export default function BottomToolbar({
 
   const btnReactions = <Reactions isOpen={reactionsOpen} onToggle={onToggleReactions} onReaction={onReaction} />;
 
+  const btnView = (
+    <div className="relative">
+      <ToolbarBtn label="View" onClick={() => setViewMenuOpen(p => !p)} activeColor="text-white">
+        <svg className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+      </ToolbarBtn>
+      {viewMenuOpen && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-36 bg-orbit-panel border border-zinc-700 rounded-xl shadow-2xl py-1 z-40 animate-fade-in overflow-hidden">
+          {[{ value: "2-speaker", label: "Speaker" }, { value: "4-gallery", label: "Gallery" }].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => { onSwitchLayout?.(opt.value); setViewMenuOpen(false); }}
+              className={`w-full text-left px-4 py-2.5 text-xs font-medium transition ${
+                layoutMode === opt.value ? "bg-orbit-blue/20 text-orbit-blue" : "text-zinc-300 hover:bg-white/5"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   const btnHost = isHost ? (
     <div className="relative">
       <ToolbarBtn label="Host" active={hostMenuOpen} onClick={() => setHostMenuOpen(p => !p)} activeColor="text-amber-400">
@@ -149,7 +182,7 @@ export default function BottomToolbar({
           {btnMic} {btnCam}
         </div>
         <div className="flex items-center h-full gap-1 text-orbit-text-muted justify-center flex-1">
-          {btnSecurity} {btnParticipants} {btnChat} {btnShare} {btnRecord} {btnBoard} {btnCaptions} {btnLink} {btnSettings} {btnReactions} {btnHost}
+          {btnSecurity} {btnParticipants} {btnView} {btnChat} {btnShare} {btnRecord} {btnBoard} {btnCaptions} {btnLink} {btnSettings} {btnReactions} {btnHost}
         </div>
         <div className="flex items-center h-full gap-1 shrink-0">
           <Link href="/" className="bg-orbit-red hover:bg-red-700 active:bg-red-800 active:scale-95 text-white font-semibold text-sm px-4 py-1.5 rounded-lg transition-all duration-150 shadow-lg shadow-red-500/20">
@@ -162,7 +195,7 @@ export default function BottomToolbar({
       <div className="flex sm:hidden flex-col w-full">
         <div className="flex items-center justify-between px-1.5 py-1.5 w-full">
           <div className="flex items-center justify-between gap-0.5 flex-1">
-            {btnMic} {btnCam} {btnChat} {btnParticipants} 
+            {btnMic} {btnCam} {btnChat} {btnParticipants} {btnView} 
             <ToolbarBtn 
               label="More" 
               onClick={() => setMobileExpanded(!mobileExpanded)} 

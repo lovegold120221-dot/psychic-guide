@@ -10,7 +10,7 @@ import ChatSidebar from "@/components/meeting/ChatSidebar";
 import BottomToolbar from "@/components/meeting/BottomToolbar";
 import Whiteboard from "@/components/meeting/Whiteboard";
 import SecurityPanel from "@/components/meeting/SecurityPanel";
-import ParticipantsPanel from "@/components/meeting/ParticipantsPanel";
+import ParticipantsSidebar from "@/components/meeting/ParticipantsSidebar";
 import FloatingReactions from "@/components/meeting/FloatingReactions";
 import { useMeetingState, useReactionAnimation } from "@/lib/hooks";
 import { LAYOUT_OPTIONS } from "@/lib/constants";
@@ -42,6 +42,7 @@ function MeetingRoomUI() {
     muteParticipant,
     removeParticipant,
     callId,
+    hostId,
   } = useMeetingRoom();
 
   const { user } = useAuth();
@@ -145,33 +146,7 @@ function MeetingRoomUI() {
                 </div>
               </div>
 
-              {/* View menu */}
-              <div className="absolute top-4 right-4 z-20">
-                <button
-                  onClick={toggleViewMenu}
-                  className="flex items-center gap-2 orbit-panel-bg text-orbit-text-secondary text-xs px-3 py-1.5 rounded-lg cursor-pointer hover:bg-zinc-800 transition shadow-lg border border-zinc-700/50"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
-                  <span className="font-medium">View</span>
-                </button>
-
-                {viewMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-orbit-panel border border-zinc-700 rounded-xl shadow-2xl py-1 z-30 animate-fade-in overflow-hidden">
-                    <div className="px-4 py-2 text-xs text-zinc-400 font-semibold border-b border-zinc-700">Layouts</div>
-                    {LAYOUT_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => switchLayout(opt.value)}
-                        className={`w-full text-left px-4 py-2.5 text-xs font-medium transition ${layoutMode === opt.value ? "bg-orbit-blue text-white" : "text-white hover:bg-white/5"}`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Layout moved to bottom toolbar */}
 
               {/* Video Grid */}
               <VideoGrid layoutMode={layoutMode} localMicMuted={isMicMuted} localCamOn={!isCameraMuted} />
@@ -217,6 +192,8 @@ function MeetingRoomUI() {
         onToggleParticipants={() => setParticipantsPanelOpen(true)}
         onShareLink={handleCopyLink}
         copiedLink={copiedLink}
+        layoutMode={layoutMode}
+        onSwitchLayout={(mode: string) => switchLayout(mode as any)}
       />
 
       {/* Security Panel */}
@@ -227,18 +204,17 @@ function MeetingRoomUI() {
         />
       )}
 
-      {/* Participants Panel */}
-      {participantsPanelOpen && (
-        <ParticipantsPanel
-          participants={participants}
-          currentUserId={user?.id || ""}
-          isHost={isHost}
-          hostId={hostId}
-          onMuteParticipant={muteParticipant}
-          onRemoveParticipant={removeParticipant}
-          onClose={() => setParticipantsPanelOpen(false)}
-        />
-      )}
+      {/* Participants Sidebar */}
+      <ParticipantsSidebar
+        isOpen={participantsPanelOpen}
+        onClose={() => setParticipantsPanelOpen(false)}
+        participants={participants}
+        currentUserId={user?.id || ""}
+        isHost={isHost}
+        hostId={hostId}
+        onMuteParticipant={muteParticipant}
+        onRemoveParticipant={removeParticipant}
+      />
     </>
   );
 }

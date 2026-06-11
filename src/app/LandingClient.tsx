@@ -79,7 +79,7 @@ export default function LandingClient() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { img: FEAT_IMG_1, title: "Real-time Chat", desc: "Built-in messaging powered by Stream. Send global messages or DM participants directly." },
+            { img: "/images/orbit_translation_mockup.png", title: "Real-time Translation", desc: "Break language barriers instantly with AI-powered, live translated subtitles." },
             { img: FEAT_IMG_2, title: "Screen Sharing", desc: "Share your screen with audio. Present documents, code, or designs in crystal clarity." },
             { img: FEAT_IMG_3, title: "Virtual Backgrounds", desc: "Blur your background, use custom images, or apply Studio Touch beautification." },
           ].map((f, i) => (
