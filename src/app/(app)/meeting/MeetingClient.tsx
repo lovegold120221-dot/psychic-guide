@@ -134,23 +134,7 @@ function MeetingRoomUI() {
           {whiteboardOpen ? (
             <Whiteboard isHost={isHost} onClose={() => setWhiteboardOpen(false)} />
           ) : (
-            <>
-              {/* Top-left badge */}
-              <div className="absolute top-4 left-4 z-20 hidden sm:flex items-center gap-2">
-                <div className="flex items-center gap-1.5 orbit-panel-bg text-orbit-text-secondary text-xs px-2.5 py-1.5 rounded-lg shadow-lg">
-                  <svg className="w-3.5 h-3.5 text-orbit-green" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path fill="#1a1a1a" d="M10.5 14.5l-3-3 1.5-1.5 1.5 1.5 4.5-4.5 1.5 1.5-6 6z" />
-                  </svg>
-                  <span className="font-medium tracking-wide">TLS Encrypted</span>
-                </div>
-              </div>
-
-              {/* Layout moved to bottom toolbar */}
-
-              {/* Video Grid */}
-              <VideoGrid layoutMode={layoutMode} localMicMuted={isMicMuted} localCamOn={!isCameraMuted} />
-            </>
+            <VideoGrid layoutMode={layoutMode} localMicMuted={isMicMuted} localCamOn={!isCameraMuted} />
           )}
 
           <FloatingReactions reactions={floatingReactions} />

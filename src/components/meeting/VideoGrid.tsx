@@ -130,7 +130,7 @@ export default function VideoGrid({ layoutMode, localMicMuted, localCamOn }: Vid
   );
 }
 
-// ─── Standard tile ────────────────────────────────────────────
+// ─── Zoom-style tile ──────────────────────────────────────────
 
 function ParticipantTile({ participant, className = "", isSpeaking = false, isHost = false }: {
   participant: any; className?: string; isSpeaking?: boolean; isHost?: boolean;
@@ -140,19 +140,19 @@ function ParticipantTile({ participant, className = "", isSpeaking = false, isHo
   const hasVideo = p.videoStream !== undefined && p.videoStream !== null;
   const name = p.name || p.userId || "Unknown";
   const isMuted = !p.isAudioEnabled;
-  const activeBorder = isSpeaking ? "active-speaker" : "";
+  const showSpeaking = isSpeaking ? "ring-2 ring-[#c1c35e]" : "";
 
   if (!hasVideo) {
     return (
-      <div className={`relative bg-orbit-panel flex items-center justify-center overflow-hidden border border-zinc-800 rounded-lg ${className} ${activeBorder}`}>
-        <InitialAvatar name={name} size={80} />
+      <div className={`relative bg-[#1c1c1e] flex items-center justify-center overflow-hidden rounded-xl ${className} ${showSpeaking}`}>
+        <InitialAvatar name={name} size={72} />
         <Nameplate name={name} isLocal={isLocal} isMuted={isMuted} isHost={isHost} />
       </div>
     );
   }
 
   return (
-    <div className={`relative bg-black flex items-center justify-center overflow-hidden border border-zinc-800 rounded-lg ${className} ${activeBorder}`}>
+    <div className={`relative bg-black flex items-center justify-center overflow-hidden rounded-xl ${className} ${showSpeaking}`}>
       <Video className="absolute inset-0 w-full h-full object-cover" participant={participant} trackType="videoTrack" playsInline muted={isLocal} />
       <Nameplate name={name} isLocal={isLocal} isMuted={isMuted} isHost={isHost} />
     </div>
@@ -168,28 +168,20 @@ function FullScreenParticipantTile({ participant, isHost = false }: { participan
   const isMuted = !p.isAudioEnabled;
   const isLocal = p.isLocal;
 
-  if (!hasVideo) {
-    return (
-      <div className="relative w-full h-full bg-orbit-panel flex items-center justify-center overflow-hidden">
-        <InitialAvatar name={name} size={140} />
-        <div className="absolute bottom-6 left-6 flex items-center gap-3">
-          <span className="text-white text-lg font-semibold drop-shadow-lg">{name}</span>
-          {isLocal && <span className="text-zinc-400 text-sm">(You)</span>}
-          {isHost && <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">HOST</span>}
-          {isMuted && <MicOffIcon />}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative w-full h-full bg-black flex items-center justify-center overflow-hidden">
-      <Video className="absolute inset-0 w-full h-full object-cover" participant={participant} trackType="videoTrack" playsInline muted={isLocal} />
-      <div className="absolute bottom-6 left-6 flex items-center gap-3">
-        <span className="text-white text-lg font-semibold drop-shadow-lg">{name}</span>
-        {isLocal && <span className="text-zinc-400 text-sm">(You)</span>}
-        {isHost && <span className="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-full">HOST</span>}
+    <div className="relative w-full h-full bg-black rounded-xl overflow-hidden">
+      {hasVideo ? (
+        <Video className="absolute inset-0 w-full h-full object-cover" participant={participant} trackType="videoTrack" playsInline muted={isLocal} />
+      ) : (
+        <div className="w-full h-full bg-[#1c1c1e] flex items-center justify-center">
+          <InitialAvatar name={name} size={120} />
+        </div>
+      )}
+      <div className="absolute bottom-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
         {isMuted && <MicOffIcon />}
+        <span className="text-white text-sm font-medium drop-shadow-lg">{name}</span>
+        {isLocal && <span className="text-zinc-400 text-xs">(You)</span>}
+        {isHost && <span className="text-[10px] font-bold text-amber-400">HOST</span>}
       </div>
     </div>
   );
@@ -197,11 +189,11 @@ function FullScreenParticipantTile({ participant, isHost = false }: { participan
 
 function Nameplate({ name, isLocal, isMuted, isHost }: { name: string; isLocal: boolean; isMuted: boolean; isHost?: boolean }) {
   return (
-    <div className="absolute bottom-0 left-0 nameplate rounded-tr z-10 flex items-center gap-1.5">
+    <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm z-10 flex items-center gap-1.5">
       {isMuted && <MicOffIcon />}
-      <span className="text-white">{name}</span>
-      {isLocal && <span className="text-[10px] text-orbit-text-dim ml-0.5">(You)</span>}
-      {isHost && <span className="text-[9px] font-bold text-amber-400 ml-1">HOST</span>}
+      <span className="text-white text-xs font-medium">{name}</span>
+      {isLocal && <span className="text-[10px] text-zinc-400">(You)</span>}
+      {isHost && <span className="text-[9px] font-bold text-amber-400">HOST</span>}
     </div>
   );
 }
