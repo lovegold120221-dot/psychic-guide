@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import InitialAvatar from "./InitialAvatar";
 
 interface VideoPreviewProps {
@@ -23,18 +23,23 @@ export default function VideoPreview({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [permissionDenied, setPermissionDenied] = useState(false);
+
   // Start/stop camera when toggle changes
   useEffect(() => {
     if (cameraOn) {
-      navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } })
+      setPermissionDenied(false);
+      navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 360 } })
         .then((stream) => {
           streamRef.current = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
         })
-        .catch(() => {
-          // Permission denied or no camera — toggle back off
+        .catch((err) => {
+          if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+            setPermissionDenied(true);
+          }
           onToggleCamera();
         });
     } else {
@@ -57,18 +62,12 @@ export default function VideoPreview({
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-orbit-darker border border-zinc-700/30 group">
-      <div
-        className={`relative flex items-center justify-center bg-gradient-to-br from-orbit-panel via-orbit-darker to-orbit-panel ${
-          compact ? "h-36 sm:h-44" : "h-48 sm:h-64"
-        }`}
-      >
-        {cameraOn ? (
+      <div className="relative aspect-video bg-gradient-to-br from-orbit-panel via-orbit-darker to-orbit-panel">
+        {cameraOn && !permissionDenied ? (
           <>
             <video
               ref={videoRef}
-              autoPlay
-              playsInline
-              muted
+              autoPlay playsInline muted
               className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
@@ -77,9 +76,21 @@ export default function VideoPreview({
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center gap-3">
-            <InitialAvatar name={userName} size={compact ? 64 : 80} />
-            <span className="text-xs text-zinc-500 font-medium">Camera is off</span>
+          <div className="absolute inset-0 flex items-center justify-center">
+            {permissionDenied ? (
+              <div className="text-center px-4">
+                <svg className="w-8 h-8 text-red-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                <p className="text-xs text-zinc-400">Camera blocked</p>
+                <p className="text-[10px] text-zinc-600 mt-1">Allow camera in browser settings</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <InitialAvatar name={userName} size={compact ? 56 : 72} />
+                <span className="text-xs text-zinc-500 font-medium">Camera is off</span>
+              </div>
+            )}
           </div>
         )}
 

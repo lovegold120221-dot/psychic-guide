@@ -314,96 +314,102 @@ export default function SettingsClient() {
 function LivePreview({ settings, selectedCam, compact = false }: { settings: VideoProcessorSettings; selectedCam: string; compact?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [streaming, setStreaming] = useState(false);
+  const [permissionDenied, setPermissionDenied] = useState(false);
+  const streamRef = useRef<MediaStream | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
 
-  useEffect(() => {
-    let cleanup: (() => void) | null = null;
-    let stream: MediaStream | null = null;
+  const startCamera = useCallback(async () => {
+    setPermissionDenied(false);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: selectedCam ? { deviceId: { exact: selectedCam }, width: 640, height: 360 } : { width: 640, height: 360 },
+      });
+      streamRef.current = stream;
 
-    async function start() {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: selectedCam ? { deviceId: { exact: selectedCam }, width: 320, height: 240 } : { width: 320, height: 240 },
-        });
-
-        // If no effects, show raw stream
-        if (!settings.mirror && settings.backgroundMode === "none" && settings.studioTouch === 0) {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            setStreaming(true);
-          }
-          return;
-        }
-
-        // Apply effects via video processor
-        const result = createProcessedStream(stream, settings);
-        cleanup = result.cleanup;
-        if (videoRef.current) {
-          videoRef.current.srcObject = result.outputStream;
-          setStreaming(true);
-        }
-      } catch {
-        setStreaming(false);
+      if (!settings.mirror && settings.backgroundMode === "none" && settings.studioTouch === 0) {
+        if (videoRef.current) { videoRef.current.srcObject = stream; setStreaming(true); }
+        return;
       }
+
+      const result = createProcessedStream(stream, settings);
+      cleanupRef.current = result.cleanup;
+      if (videoRef.current) { videoRef.current.srcObject = result.outputStream; setStreaming(true); }
+    } catch (err: any) {
+      if (err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError") {
+        setPermissionDenied(true);
+      }
+      setStreaming(false);
     }
-
-    start();
-
-    return () => {
-      if (cleanup) cleanup();
-      else if (stream) stream.getTracks().forEach((t) => t.stop());
-      if (videoRef.current) videoRef.current.srcObject = null;
-    };
   }, [settings, selectedCam]);
 
+  // Auto-start on mount if settings page opened
+  useEffect(() => {
+    const timeout = setTimeout(() => startCamera(), 500);
+    return () => {
+      clearTimeout(timeout);
+      if (cleanupRef.current) cleanupRef.current();
+      else if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
+    };
+  }, [startCamera]);
+
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-black border border-white/[0.06] ${compact ? "h-40" : "h-52 sm:h-64"}`}>
+    <div className="relative overflow-hidden rounded-2xl bg-black border border-white/[0.06] aspect-video">
       {streaming ? (
         <video
           ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className={`w-full h-full object-cover ${settings.mirror ? "-scale-x-100" : ""}`}
+          autoPlay playsInline muted
+          className={`absolute inset-0 w-full h-full object-cover ${settings.mirror ? "-scale-x-100" : ""}`}
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <svg className="w-10 h-10 text-zinc-700 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <p className="text-xs text-zinc-600">Camera preview</p>
-            <p className="text-[10px] text-zinc-700 mt-1">Allow camera access to see effects</p>
+            {permissionDenied ? (
+              <>
+                <svg className="w-10 h-10 text-red-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+                <p className="text-xs text-zinc-400 mb-2">Camera permission denied</p>
+                <p className="text-[10px] text-zinc-600 mb-3">Allow camera access in your browser settings</p>
+                <button onClick={startCamera} className="text-xs font-medium text-orbit-blue hover:underline">Try again</button>
+              </>
+            ) : (
+              <>
+                <svg className="w-10 h-10 text-zinc-700 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <p className="text-xs text-zinc-600 mb-3">Camera preview</p>
+                <button
+                  onClick={startCamera}
+                  className="px-4 py-2 bg-orbit-blue hover:bg-blue-500 text-white text-xs font-semibold rounded-xl transition active:scale-95"
+                >
+                  Enable Camera
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
 
       {/* Effect badges */}
-      <div className="absolute top-2 left-2 flex gap-1.5">
-        {settings.backgroundMode !== "none" && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orbit-blue/20 text-orbit-blue border border-orbit-blue/20">
-            {settings.backgroundMode === "blur" ? "Blur" : "BG"}
-          </span>
-        )}
-        {settings.studioTouch > 0 && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-pink-500/20 text-pink-300 border border-pink-500/20">
-            Beautify {settings.studioTouch}%
-          </span>
-        )}
-        {settings.mirror && (
-          <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-500/20 text-zinc-300 border border-zinc-500/20">
-            Mirror
-          </span>
-        )}
-      </div>
-
-      {!streaming && (
-        <div className="absolute bottom-2 left-2 right-2 text-center">
-          <button
-            onClick={() => window.location.reload()}
-            className="text-[10px] text-orbit-blue hover:underline"
-          >
-            Enable camera
-          </button>
+      {streaming && (
+        <div className="absolute top-2 left-2 flex gap-1.5">
+          {settings.backgroundMode !== "none" && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orbit-blue/20 text-orbit-blue border border-orbit-blue/20">
+              {settings.backgroundMode === "blur" ? "Blur" : "BG"}
+            </span>
+          )}
+          {settings.studioTouch > 0 && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-pink-500/20 text-pink-300 border border-pink-500/20">
+              Beautify {settings.studioTouch}%
+            </span>
+          )}
+          {settings.mirror && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-500/20 text-zinc-300 border border-zinc-500/20">
+              Mirror
+            </span>
+          )}
         </div>
       )}
     </div>
