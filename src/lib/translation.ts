@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 
 export interface TranslationEntry {
   id: string;
@@ -9,15 +9,11 @@ export interface TranslationEntry {
   timestamp: string;
 }
 
-interface UseTranslationOptions {
-  apiKey?: string;
-}
-
-export function useTranslation({ apiKey }: UseTranslationOptions = {}) {
+export function useTranslation() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [entries, setEntries] = useState<TranslationEntry[]>([]);
-  const wsRef = useRef<WebSocket | null>(null);
+  const [apiReady, setApiReady] = useState(true);
   const idRef = useRef(0);
 
   const getLanguageName = useCallback((code: string) => {
@@ -47,31 +43,25 @@ export function useTranslation({ apiKey }: UseTranslationOptions = {}) {
   }, []);
 
   const startTranslation = useCallback(async (lang: string) => {
-    setIsTranslating(true);
     setTargetLanguage(lang);
-
-    // In production, this would connect to a server endpoint
-    // that proxies the Gemini Live Translation API.
-    // For now, we simulate translation with a delay.
     try {
-      // Try to connect via a server-side API route
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "start",
-          targetLanguage: lang,
-          apiKey: apiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-        }),
+        body: JSON.stringify({ action: "start", targetLanguage: lang }),
       });
       if (!res.ok) {
-        throw new Error("Translation API not available");
+        const err = await res.json();
+        throw new Error(err.error || "Translation API not available");
       }
-    } catch {
-      // Simulate translation for demo - will work when API is set up
-      console.log("Translation simulation mode (no API key configured)");
+      setIsTranslating(true);
+      setApiReady(true);
+    } catch (err: any) {
+      console.error("Translation start error:", err.message);
+      setApiReady(false);
+      setIsTranslating(false);
     }
-  }, [apiKey]);
+  }, []);
 
   const stopTranslation = useCallback(async () => {
     setIsTranslating(false);
@@ -92,11 +82,27 @@ export function useTranslation({ apiKey }: UseTranslationOptions = {}) {
     }
   }, [isTranslating, targetLanguage, startTranslation, stopTranslation]);
 
-  const addEntry = useCallback((original: string, translated: string) => {
-    const id = `t-${++idRef.current}`;
-    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setEntries((prev) => [...prev.slice(-50), { id, original, translated, timestamp }]);
-  }, []);
+  const translateText = useCallback(async (text: string) => {
+    if (!isTranslating || !text.trim()) return;
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "translate",
+          targetLanguage,
+          text,
+        }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.translated) {
+        const id = `t-${++idRef.current}`;
+        const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        setEntries((prev) => [...prev.slice(-50), { id, original: data.original, translated: data.translated, timestamp }]);
+      }
+    } catch {}
+  }, [isTranslating, targetLanguage]);
 
   const changeLanguage = useCallback(async (code: string) => {
     setTargetLanguage(code);
@@ -111,10 +117,10 @@ export function useTranslation({ apiKey }: UseTranslationOptions = {}) {
     targetLanguage,
     targetLangName: getLanguageName(targetLanguage),
     entries,
+    apiReady,
     toggleTranslation,
     changeLanguage,
-    addEntry,
-    startTranslation,
-    stopTranslation,
+    translateText,
+    setEntries,
   };
 }
