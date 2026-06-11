@@ -24,22 +24,26 @@ export default function VideoGrid({
     const second = participants[1];
     return (
       <div className="w-full h-full p-2 flex flex-col sm:flex-row items-center justify-center gap-1">
-        <VideoCell
-          participant={first}
-          isLocal={first.id === localUserId}
-          localMicMuted={localMicMuted}
-          localCamOn={localCamOn}
-          className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]"
-          isActiveSpeaker={first.active}
-        />
-        <VideoCell
-          participant={second}
-          isLocal={second.id === localUserId}
-          localMicMuted={localMicMuted}
-          localCamOn={localCamOn}
-          className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]"
-          isActiveSpeaker={second.active}
-        />
+        {first && (
+          <VideoCell
+            participant={first}
+            isLocal={first.id === localUserId}
+            localMicMuted={localMicMuted}
+            localCamOn={localCamOn}
+            className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]"
+            isActiveSpeaker={first.active}
+          />
+        )}
+        {second && (
+          <VideoCell
+            participant={second}
+            isLocal={second.id === localUserId}
+            localMicMuted={localMicMuted}
+            localCamOn={localCamOn}
+            className="w-full sm:w-1/2 h-1/2 sm:h-full max-h-[85vh]"
+            isActiveSpeaker={second.active}
+          />
+        )}
       </div>
     );
   }
@@ -48,29 +52,35 @@ export default function VideoGrid({
     return (
       <div className="w-full h-full p-2 flex flex-col gap-1 max-w-5xl mx-auto">
         <div className="flex w-full h-1/2 gap-1 justify-center">
-          <VideoCell
-            participant={participants[0]}
-            isLocal={participants[0].id === localUserId}
-            localMicMuted={localMicMuted}
-            localCamOn={localCamOn}
-            className="w-1/2 h-full"
-          />
-          <VideoCell
-            participant={participants[2]}
-            isLocal={participants[2].id === localUserId}
-            localMicMuted={localMicMuted}
-            localCamOn={localCamOn}
-            className="w-1/2 h-full"
-          />
+          {participants[0] && (
+            <VideoCell
+              participant={participants[0]}
+              isLocal={participants[0].id === localUserId}
+              localMicMuted={localMicMuted}
+              localCamOn={localCamOn}
+              className="w-1/2 h-full"
+            />
+          )}
+          {participants[2] && (
+            <VideoCell
+              participant={participants[2]}
+              isLocal={participants[2].id === localUserId}
+              localMicMuted={localMicMuted}
+              localCamOn={localCamOn}
+              className="w-1/2 h-full"
+            />
+          )}
         </div>
         <div className="flex w-full h-1/2 gap-1 justify-center">
-        <VideoCell
-          participant={participants[1]}
-          isLocal={participants[1].id === localUserId}
-          localMicMuted={localMicMuted}
-          localCamOn={localCamOn}
-          className="w-1/2 h-full"
-        />
+          {participants[1] && (
+            <VideoCell
+              participant={participants[1]}
+              isLocal={participants[1].id === localUserId}
+              localMicMuted={localMicMuted}
+              localCamOn={localCamOn}
+              className="w-1/2 h-full"
+            />
+          )}
         </div>
       </div>
     );

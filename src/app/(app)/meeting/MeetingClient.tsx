@@ -40,18 +40,28 @@ export default function MeetingClient() {
 
   const { floatingReactions, triggerReaction } = useReactionAnimation();
 
-  // Initialize with the current user as the only participant
+  // Initialize and update the current user in the participants list
   useEffect(() => {
-    setParticipants([
-      {
-        id: userId,
-        name: userName,
-        img: userAvatar,
-        muted: localMicMuted,
-        active: true,
-        hasVideo: localCamOn,
-      },
-    ]);
+    setParticipants((prev) => {
+      const exists = prev.find((p) => p.id === userId);
+      if (exists) {
+        return prev.map((p) =>
+          p.id === userId ? { ...p, muted: localMicMuted, hasVideo: localCamOn } : p
+        );
+      } else {
+        return [
+          ...prev,
+          {
+            id: userId,
+            name: userName,
+            img: userAvatar,
+            muted: localMicMuted,
+            active: true,
+            hasVideo: localCamOn,
+          },
+        ];
+      }
+    });
   }, [userId, userName, userAvatar, localMicMuted, localCamOn, setParticipants]);
 
   // Stream Chat integration
