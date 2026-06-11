@@ -4,47 +4,91 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
+/* ============================================================
+   ORBIT — Global Styles
+   Native-feel responsive layout with sticky header/footer
+   ============================================================ */
+
 /* ---- Base ---- */
-html,
-body {
+html, body {
   @apply bg-orbit-darker text-white font-sans m-0 p-0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
   overflow: hidden;
+  /* iOS momentum scrolling where needed */
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ---- iOS safe area support ---- */
+/* ---- Safe Areas (iOS notch + home indicator) ---- */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .safe-area-bottom {
+  .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+@supports (height: 100dvh) {
+  .h-screen-safe {
+    height: 100dvh;
+  }
+  .w-screen-safe {
+    width: 100dvw;
+  }
+}
 
-/* ---- Scrollbar ---- */
+/* ---- Custom Scrollbar ---- */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #121212;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #333;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
 
-/* ---- Focus ring ---- */
+/* ---- Focus ring (accessibility, no outline on click) ---- */
 *:focus-visible {
   outline: 2px solid #0e72ed;
   outline-offset: 2px;
   border-radius: 4px;
 }
+*:focus:not(:focus-visible) {
+  outline: none;
+}
 
-/* ---- Orbit utility classes ---- */
+/* ---- Button tap highlight ---- */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* ---- Native touch feedback ---- */
+.native-btn {
+  @apply transition-all duration-150 ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+.native-btn:active {
+  transform: scale(0.94);
+}
+.native-btn-soft:active {
+  transform: scale(0.97);
+}
+.native-btn-lift:active {
+  transform: translateY(1px) scale(0.97);
+}
+
+/* ---- Orbit Utility Classes ---- */
 @layer components {
   .orbit-title-bar {
     @apply bg-orbit-panel;
@@ -102,7 +146,7 @@ body {
     transform: translateY(0) scale(0.97);
   }
 
-  /* Glassmorphism card */
+  /* Glassmorphism cards */
   .glass-card {
     background: rgba(36, 36, 36, 0.7);
     backdrop-filter: blur(24px);
@@ -136,38 +180,24 @@ body {
     animation: shimmer 2s infinite;
   }
 
-  /* Tap highlight removal for mobile */
-  .tap-none {
-    -webkit-tap-highlight-color: transparent;
+  /* Control button active state (red line) */
+  .control-slash {
+    @apply absolute inset-0 flex items-center justify-center;
   }
-
-  /* Native-like scroll snap */
-  .snap-y-mandatory {
-    scroll-snap-type: y mandatory;
-  }
-  .snap-start {
-    scroll-snap-align: start;
+  .control-slash-line {
+    @apply w-6 h-[2px] bg-[#ff3b30] rotate-45 border border-orbit-dark;
   }
 }
 
+/* ---- Animations ---- */
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-/* ---- Layout helpers ---- */
-.h-screen-safe {
-  height: 100vh;
-  height: 100dvh;
-}
-
-.w-screen-safe {
-  width: 100vw;
-  width: 100dvw;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ---- Input date/time styling ---- */
@@ -177,10 +207,23 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   opacity: 0.5;
   cursor: pointer;
 }
-
 input[type="date"]::-webkit-calendar-picker-indicator:hover,
 input[type="time"]::-webkit-calendar-picker-indicator:hover {
   opacity: 0.8;
+}
+
+/* ---- Hide scrollbar on toolbars ---- */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---- Contain overscroll (prevent pull-to-refresh on mobile) ---- */
+.overscroll-contain {
+  overscroll-behavior: contain;
 }
 
 /* ---- Select styling ---- */
