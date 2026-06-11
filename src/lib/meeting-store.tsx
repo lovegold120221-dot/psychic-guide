@@ -10,7 +10,7 @@ import {
   useToggleCallRecording,
   type StreamVideoClient,
 } from "@stream-io/video-react-sdk";
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from "react";
 import { useStreamChat, type StreamChatMessage } from "./stream";
 
 // ─── Types ─────────────────────────────────────────────────────
@@ -212,15 +212,23 @@ function CallCreator({
   const [call, setCall] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const joinedRef = useRef(false);
+
   useEffect(() => {
     if (!client) return;
+    if (joinedRef.current) return; // prevent double-join in Strict Mode
+    joinedRef.current = true;
+
     const newCall = client.call("default", callId);
     setCall(newCall);
     newCall.join({ create: true }).catch((err: any) => {
       console.error("Failed to join call:", err);
       setError(err.message);
     });
-    return () => { newCall.leave().catch(() => {}); };
+    return () => {
+      joinedRef.current = false;
+      newCall.leave().catch(() => {});
+    };
   }, [client, callId]);
 
   if (error) {
