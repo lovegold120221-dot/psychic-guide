@@ -41,6 +41,7 @@ export default function BottomToolbar({
 }: BottomToolbarProps) {
   const [captionsOn, setCaptionsOn] = useState(false);
   const [hostMenuOpen, setHostMenuOpen] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
 
   const btnMic = (
     <ToolbarBtn active={!localMicMuted} label={localMicMuted ? "Unmute" : "Mute"} onClick={onToggleMic} activeColor="text-white">
@@ -141,7 +142,7 @@ export default function BottomToolbar({
   ) : null;
 
   return (
-    <div className="orbit-toolbar w-full shrink-0 sticky bottom-0 z-30 border-t border-black/50 safe-bottom">
+    <div className="orbit-toolbar w-full shrink-0 sticky bottom-0 z-30 border-t border-black/50 safe-bottom bg-orbit-dark/95 backdrop-blur-md">
       {/* DESKTOP LAYOUT */}
       <div className="hidden sm:flex items-center justify-between px-3 h-[64px] gap-1">
         <div className="flex items-center h-full gap-1 shrink-0">
@@ -160,16 +161,27 @@ export default function BottomToolbar({
       {/* MOBILE LAYOUT */}
       <div className="flex sm:hidden flex-col w-full">
         <div className="flex items-center justify-between px-1.5 py-1.5 w-full">
-          <div className="flex items-center gap-0.5">
-            {btnMic} {btnCam} {btnChat} {btnParticipants}
+          <div className="flex items-center justify-between gap-0.5 flex-1">
+            {btnMic} {btnCam} {btnChat} {btnParticipants} 
+            <ToolbarBtn 
+              label="More" 
+              onClick={() => setMobileExpanded(!mobileExpanded)} 
+              activeColor="text-white"
+            >
+              <svg className={`w-[16px] sm:w-[18px] h-[16px] sm:h-[18px] transition-transform ${mobileExpanded ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+              </svg>
+            </ToolbarBtn>
           </div>
-          <Link href="/" className="bg-orbit-red active:bg-red-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow-lg shadow-red-500/20 ml-2">
+          <Link href="/" className="bg-orbit-red active:bg-red-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg shadow-lg shadow-red-500/20 ml-2 shrink-0">
             Leave
           </Link>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-0.5 px-1.5 pb-2 text-orbit-text-muted">
-          {btnShare} {btnRecord} {btnBoard} {btnReactions} {btnSecurity} {btnCaptions} {btnLink} {btnSettings} {btnHost}
-        </div>
+        {mobileExpanded && (
+          <div className="flex flex-wrap items-center gap-0.5 px-1.5 pb-2 pt-1 text-orbit-text-muted border-t border-white/[0.04] bg-orbit-dark/50 animate-fade-in justify-start">
+            {btnShare} {btnRecord} {btnBoard} {btnReactions} {btnSecurity} {btnCaptions} {btnLink} {btnSettings} {btnHost}
+          </div>
+        )}
       </div>
     </div>
   );
